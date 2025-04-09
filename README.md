@@ -93,9 +93,6 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
  
 
 ## 💡 Future Improvements
----
-
-## 💡 Future Improvements
 - ✅ Add anime recommendations based on genres and preferences.
 - 📈 Track watched/completed anime progress.
 - 🧠 Integrate with anime databases like MyAnimeList or AniList.
