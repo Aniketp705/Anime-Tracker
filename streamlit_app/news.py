@@ -32,7 +32,10 @@ def app():
 
     if st.button("Get Latest News"):
         with st.spinner("Fetching fresh anime news..."):
+            # Clear the existing news from the database
             anime_news.delete_news()
+
+            # Fetch and store the latest news
             news_scraper.fetch_and_store_news()
             time.sleep(1)
             
@@ -41,9 +44,12 @@ def app():
 
         st.session_state.news = []
         if news_list:
-            for i, title in enumerate(news_list, start=1):
-                st.session_state.news.append(title[0])
-                st.markdown(f'<div class="news-box">{i}. {title[0]}</div>', unsafe_allow_html=True)
+            for i, (title, url) in enumerate(news_list, start=1):
+                st.session_state.news.append(title)
+                st.markdown(f'''
+                    <div class="news-box">
+                            {i}. <a href="{url}" target="_blank" style="text-decoration: none; color: #e73c7e;">{title}</a>
+                    ''', unsafe_allow_html=True)    
                 time.sleep(0.2)
                 if i == 10:
                     break

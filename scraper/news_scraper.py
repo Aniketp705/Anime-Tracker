@@ -30,9 +30,15 @@ def fetch_and_store_news():
             if i > 10:
                 break
             try:
-                title = article.find_element(By.TAG_NAME, 'a').text.strip()
-                anime_news.add_news(title, "")
+                link_element = article.find_element(By.CSS_SELECTOR, 'a[href]')
+                title = link_element.text.strip()
+                link = link_element.get_attribute('href')
+                anime_news.add_news(title, "", link)
             except Exception as e:
                 print("Error reading article:", e)
+
     finally:
         driver.quit()
+
+
+fetch_and_store_news()

@@ -16,24 +16,25 @@ def create_table():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             description TEXT NOT NULL,
+            link TEXT NOT NULL,
             date TEXT DEFAULT (DATE('now'))
         )
     ''')
     conn.commit()
     
 #add news to the database
-def add_news(title, description):
+def add_news(title, description, link):
     cursor.execute("SELECT * FROM anime_news WHERE title = ?", (title,))
     if cursor.fetchone() is None:
         cursor.execute('''
-            INSERT INTO anime_news (title, description) VALUES (?, ?)
-        ''', (title, description))
+            INSERT INTO anime_news (title, description, link) VALUES (?, ?, ?)
+        ''', (title, description, link))
         conn.commit()
 
 
 # Get the latest news from the database
 def get_news():
-    cursor.execute('''SELECT title FROM anime_news ORDER BY date DESC''')
+    cursor.execute('''SELECT title,link FROM anime_news ORDER BY date DESC''')
     news = cursor.fetchall()
     return news
 
@@ -43,4 +44,4 @@ def delete_news():
     conn.commit()
 
 
-
+print(get_news())
