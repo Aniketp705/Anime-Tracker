@@ -1,4 +1,7 @@
-![Anime Tracker Banner](streamlit_app/assets/banner.jpg)
+<p align="center">
+  <img src="streamlit_app/assets/banner.jpg" alt="Anime Tracker Banner" width="100%">
+</p>
+
 
 # Anime Tracker 🎥📖
 
