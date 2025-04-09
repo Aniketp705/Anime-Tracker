@@ -67,22 +67,27 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
 
 ## 📁 Project Structure
     ``bash
-    anime-tracker/
-    │
+    Anime-Tracker/
     ├── database/
-    │   └── anime_news.py      
-    │
+    │   ├── anime_news.py
+    │   ├── user.py
+    │   ├── anime_news.db
+    │   └── user.db
     ├── scraper/
-    │   └── news_scraper.py    
-    │
+    │   ├── news_scraper.py
+    │   └── chromedriver.exe
     ├── streamlit_app/
-    │   ├── assets/            
-    │   ├── components/        
-    │   ├── pages/             
-    │   └── main.py            
-    │
-    ├── requirements.txt       
-    └── README.md              
+    │   ├── main.py
+    │   ├── home.py
+    │   ├── news.py
+    │   ├── anime.py
+    │   ├── about.py
+    │   ├── account.py
+    │   └── assets/
+    │       ├── banner.jpg
+    │       └── wallpaper.jpg
+    └── requirements.txt
+ 
 
 ## 💡 Future Improvements
 ---
