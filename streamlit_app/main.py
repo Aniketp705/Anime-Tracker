@@ -1,7 +1,10 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-import about, home, anime, news
-import account
+import about, home, anime, news, account
+import pathlib
+
+
+
 
 #set page config
 try:
@@ -87,8 +90,8 @@ class MultiApp:
             """
             <style>
             /* Target the outermost navbar wrapper with class 'menu' */
-            .menu {
-                background-color: transparent !important; /* Or match your theme */
+            [data-testid = "st.menu"] {
+                background-color: transparent ; /* Or match your theme */
                 border-radius: 30px !important;
                 box-shadow: none !important;
                 margin-top: 10px;
