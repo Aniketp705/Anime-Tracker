@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 import os
 import sys
 import time
@@ -15,7 +15,6 @@ def app():
     st.title("📰 Latest Anime News")
     st.subheader("Stay updated with the latest buzz in the anime world!")
 
-    # Inject a little CSS for news card style
     st.markdown("""
         <style>
         .news-box {
@@ -30,31 +29,31 @@ def app():
         </style>
     """, unsafe_allow_html=True)
 
+    # Initialize session state for news
+    if "news" not in st.session_state:
+        st.session_state.news = []
+
     if st.button("Get Latest News"):
         with st.spinner("Fetching fresh anime news..."):
-            # Clear the existing news from the database
             anime_news.delete_news()
-
-            # Fetch and store the latest news
             news_scraper.fetch_and_store_news()
             time.sleep(1)
-            
-        # Get the latest news from the database
-        news_list = anime_news.get_news()
 
-        st.session_state.news = []
-        if news_list:
-            for i, (title, url) in enumerate(news_list, start=1):
-                st.session_state.news.append(title)
-                st.markdown(f'''
-                    <div class="news-box">
-                            {i}. <a href="{url}" target="_blank" style="text-decoration: none; color: #e73c7e;">{title}</a>
-                    ''', unsafe_allow_html=True)    
-                time.sleep(0.2)
-                if i == 10:
-                    break
-        else:
-            st.warning("No news available.")
+        # Get fresh news and store in session
+        st.session_state.news = anime_news.get_news()
+        st.rerun()  # Force a rerun to display the updated news
 
-    
-    
+    # Display the news from session state
+    if st.session_state.news:
+        for i, (title, url) in enumerate(st.session_state.news[:10], start=1):
+            st.markdown(f'''
+                <div class="news-box">
+                    {i}. <a href="{url}" target="_blank" style="text-decoration: none; color: #e73c7e;">{title}</a>
+                </div>
+            ''', unsafe_allow_html=True)
+            time.sleep(0.1)
+    else:
+        st.info("Click 'Get Latest News' to fetch the latest updates.")
+
+if __name__ == "__main__":
+    app()

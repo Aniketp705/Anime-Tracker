@@ -15,19 +15,26 @@ def create_table():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL UNIQUE,
             email TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            profile BLOB DEFAULT NULL
         )
     ''')
     conn.commit()
 
 
-
+#add user to the database
 def add_user(username, email, password):
+    #add default profile pic
+    default_profile = "database/blankprofile.png"
+    with open(default_profile, 'rb') as f:
+        default_pic = f.read()
     cursor.execute('''
-        INSERT INTO users (username, email, password) VALUES (?, ?, ?)
-    ''', (username, email, password))
+        INSERT INTO users (username, email, password, profile) VALUES (?, ?, ?, ?)
+    ''', (username, email, password, default_pic))
     conn.commit()
 
+
+#find the user
 def find_user(username):
     cursor.execute('''
         SELECT * FROM users WHERE username = ?
@@ -35,6 +42,7 @@ def find_user(username):
     user = cursor.fetchone()
     return user
 
+#find the user by email
 def find_email(email):
     cursor.execute('''
         SELECT * FROM users WHERE email = ?
@@ -42,13 +50,39 @@ def find_email(email):
     user = cursor.fetchone()
     return user
 
+#get all the users as list
 def get_user():
     cursor.execute('''SELECT * FROM users''')
     users = cursor.fetchall()
     return users
 
+#change password of the user
+def update_password(username, new_pass):
+    cursor.execute('''
+        UPDATE users SET password = ? WHERE username = ?
+    ''', (new_pass, username))
+    conn.commit()
+
+#update the email of the user
+def update_email(username, new_email):
+    cursor.execute('''
+        UPDATE users SET email = ? WHERE username = ?
+    ''', (new_email, username))
+    conn.commit()
+
+def add_profile_pic(username, profile_pic):
+    cursor.execute('''
+        UPDATE users SET profile = ? WHERE username = ?
+    ''', (profile_pic, username))
+    conn.commit()
+
+
+#remove the user from the database
 def delete_user(username):
     cursor.execute('''
         DELETE FROM users WHERE username = ?
     ''', (username,))
     conn.commit()
+
+
+print(get_user())

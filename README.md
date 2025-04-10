@@ -92,7 +92,7 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
     └── requirements.txt
  
 
-## 💡 Future Improvements
+<!-- ## 💡 Future Improvements
 - ✅ Add anime recommendations based on genres and preferences.
 - 📈 Track watched/completed anime progress.
 - 🧠 Integrate with anime databases like MyAnimeList or AniList.
@@ -100,7 +100,7 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
 - 📊 Visualize user anime stats with charts and graphs.
 - 🤖 Add AI-based suggestions using user viewing patterns.
 
----
+--- -->
 
 ## 🤝 Contributing
 
