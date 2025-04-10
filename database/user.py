@@ -35,7 +35,20 @@ def find_user(username):
     user = cursor.fetchone()
     return user
 
+def find_email(email):
+    cursor.execute('''
+        SELECT * FROM users WHERE email = ?
+    ''', (email,))
+    user = cursor.fetchone()
+    return user
+
 def get_user():
     cursor.execute('''SELECT * FROM users''')
     users = cursor.fetchall()
     return users
+
+def delete_user(username):
+    cursor.execute('''
+        DELETE FROM users WHERE username = ?
+    ''', (username,))
+    conn.commit()

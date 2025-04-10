@@ -40,8 +40,7 @@ def get_news():
 
 #clear the news from the database
 def delete_news():
-    cursor.execute('''DELETE FROM anime_news''')
+    cursor.execute('DELETE FROM anime_news')
+    cursor.execute('DELETE FROM sqlite_sequence WHERE name="anime_news"')
     conn.commit()
 
-
-print(get_news())

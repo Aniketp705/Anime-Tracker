@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-import about, home, anime, news, account
+import about, home, anime, news, account, profile
 import pathlib
 
 
@@ -76,6 +76,7 @@ class MultiApp:
                 {"title": "News", "function": news.app},
                 {"title": "About", "function": about.show_about_page},
                 {"title": "Account", "function": account.my_account},
+                {"title": "Profile", "function": profile.show_profile}
             ]
         else:
             self.apps = [
@@ -105,8 +106,8 @@ class MultiApp:
 
         # only display the menu if the user is logged in
         if st.session_state.logged_in:
-            menu_items = ["Home", "My Anime", "News", "About", "Account"]
-            icons_list = ["house", "book", "journal-text", "info-circle", "person"]
+            menu_items = ["Home", "My Anime", "News", "About", "Profile", "Account"]
+            icons_list = ["house", "book", "journal-text", "info-circle", "person-badge", "person"]
         
         else:
             menu_items = ["Home", "Account"]
