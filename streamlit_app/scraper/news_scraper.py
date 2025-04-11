@@ -16,7 +16,7 @@ def fetch_and_store_news():
 
     chrome_options = Options()
     chrome_options.add_argument("--headless")
-    service = Service('scraper/chromedriver.exe')
+    service = Service('streamlit_app/scraper/chromedriver.exe')
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     driver.get('https://www.cbr.com/category/anime-news/')

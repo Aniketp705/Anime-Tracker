@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-import about, home, anime, news, account, profile
+from UI import about, home, anime, news, account, profile
 import pathlib
 
 
