@@ -2,7 +2,7 @@ import streamlit as st
 import sys, os, io, base64
 from PIL import Image
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # import database
 from database import user

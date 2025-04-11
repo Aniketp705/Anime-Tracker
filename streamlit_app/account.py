@@ -2,7 +2,7 @@ import streamlit as st
 import re
 import os, sys, time
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from database import user
 
 # Initialize the database
