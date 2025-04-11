@@ -68,7 +68,7 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
     streamlit run streamlit_app/main.py
 5. Enjoy exploring and managing you anime world!
 
-## 📁 Project Structure
+<!-- ## 📁 Project Structure
     ``bash
     Anime-Tracker/
     ├── database/
@@ -89,7 +89,7 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
     │   └── assets/
     │       ├── banner.jpg
     │       └── wallpaper.jpg
-    └── requirements.txt
+    └── requirements.txt -->
  
 
 <!-- ## 💡 Future Improvements
