@@ -22,6 +22,22 @@ def create_table():
     conn.commit()
 
 
+#create a table for watched anime
+def create_watched_table():
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_anime (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            anime_title TEXT NOT NULL,
+            episodes_watched INTEGER NOT NULL DEFAULT 0,
+            status TEXT NOT NULL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    conn.commit()
+
+
 #add user to the database
 def add_user(username, email, password):
     #add default profile pic
@@ -85,4 +101,31 @@ def delete_user(username):
     conn.commit()
 
 
-print(get_user())
+#add anime to the user
+def add_anime(username, anime_title, episodes_watched, status):
+    try:
+
+        # Check for duplicate entry
+        cursor.execute('''
+            SELECT * FROM user_anime
+            WHERE username = ? AND anime_title = ?
+        ''', (username, anime_title))
+        existing = cursor.fetchone()
+
+        if existing:
+            return False, "You've already added this anime."
+
+        # Insert if not a duplicate
+        cursor.execute('''
+            INSERT INTO user_anime (username, anime_title, episodes_watched, status)
+            VALUES (?, ?, ?, ?)
+        ''', (username, anime_title, episodes_watched, status))
+        conn.commit()
+        return True, "Anime added successfully!"
+
+    except Exception as e:
+        return False, f"Error: {str(e)}"
+
+
+cursor.execute('''DELETE FROM user_anime WHERE id == 2''')
+conn.commit()
