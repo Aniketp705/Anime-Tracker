@@ -102,6 +102,15 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
 
 --- -->
 
+## ⚠️ Important Notices
+
+1. **Use Google Chrome for the Best Experience**  
+   For a smooth and seamless UI experience, please use the latest version of **Google Chrome** as your browser.
+
+2. **Update ChromeDriver**  
+   - Download the latest ChromeDriver from [Google Chrome Labs](https://googlechromelabs.github.io/chrome-for-testing/).
+   - Replace the existing `chromedriver.exe` file in the `scraper` folder with the newly downloaded driver.
+
 ## 🤝 Contributing
 
 Contributions are welcome! If you'd like to improve the project:
