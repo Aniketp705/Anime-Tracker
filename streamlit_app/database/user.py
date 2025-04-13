@@ -3,7 +3,7 @@ import sqlite3
 
 # Get the absolute path to the db folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(BASE_DIR, "user.db")
+db_path = os.path.join(BASE_DIR, "user.db") 
 
 # Connect using the full path
 conn = sqlite3.connect(db_path, check_same_thread=False)
@@ -22,26 +22,54 @@ def create_table():
     conn.commit()
 
 
-#create a table for watched anime
+# Create the user_anime table
 def create_watched_table():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS user_anime (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
             anime_title TEXT NOT NULL,
             episodes_watched INTEGER NOT NULL DEFAULT 0,
             status TEXT NOT NULL,
-            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id)
+            genre TEXT,
+            total_episodes INTEGER,
+            year TEXT,
+            rating REAL,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     conn.commit()
 
 
+
+#get the user id from the username
+def get_user_id(username):
+    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+    result = cursor.fetchone()
+    return result[0] if result else None
+
+#create a table for watched anime
+def add_anime(username, title, episodes_watched, status, genre, total_episodes, year, rating):
+    user_id = get_user_id(username)
+    if not user_id:
+        return False, "User not found."
+
+    try:
+        cursor.execute('''
+            INSERT INTO user_anime (user_id, anime_title, episodes_watched, status, genre, total_episodes, year, rating)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, title, episodes_watched, status, genre, total_episodes, year, rating))
+        conn.commit()
+        return True, f"{title} added successfully."
+    except Exception as e:
+        return False, f"Failed to add anime: {e}"
+
+
+
 #add user to the database
 def add_user(username, email, password):
     #add default profile pic
-    default_profile = "database/blankprofile.png"
+    default_profile = "streamlit_app/database/blankprofile.png"
     with open(default_profile, 'rb') as f:
         default_pic = f.read()
     cursor.execute('''
@@ -102,24 +130,20 @@ def delete_user(username):
 
 
 #add anime to the user
-def add_anime(username, anime_title, episodes_watched, status):
+def add_anime(username, title, episodes_watched, status, genre, total_eps, year, rating):
     try:
-
-        # Check for duplicate entry
+        # prevent duplicates
         cursor.execute('''
             SELECT * FROM user_anime
             WHERE username = ? AND anime_title = ?
-        ''', (username, anime_title))
-        existing = cursor.fetchone()
+        ''', (username, title))
+        if cursor.fetchone():
+            return False, "Anime already exists in your list."
 
-        if existing:
-            return False, "You've already added this anime."
-
-        # Insert if not a duplicate
         cursor.execute('''
-            INSERT INTO user_anime (username, anime_title, episodes_watched, status)
-            VALUES (?, ?, ?, ?)
-        ''', (username, anime_title, episodes_watched, status))
+            INSERT INTO user_anime (username, anime_title, episodes_watched, status, genre, total_episodes, year, rating)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (username, title, episodes_watched, status, genre, total_eps, year, rating))
         conn.commit()
         return True, "Anime added successfully!"
 
@@ -127,5 +151,3 @@ def add_anime(username, anime_title, episodes_watched, status):
         return False, f"Error: {str(e)}"
 
 
-cursor.execute('''DELETE FROM user_anime WHERE id == 2''')
-conn.commit()
