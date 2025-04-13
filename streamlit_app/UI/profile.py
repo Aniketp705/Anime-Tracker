@@ -90,3 +90,33 @@ def show_profile():
                 user.add_profile_pic(st.session_state.username, uploaded_pic.read())
                 st.success("Profile picture updated successfully!")
                 st.rerun()
+
+    elif selected_option == "Get Watched Anime":
+        st.subheader("Watched Anime")
+        watched_anime = user.get_watched_anime(st.session_state.username)
+        if watched_anime:
+            for anime in watched_anime:
+                st.write(f"**Title:** {anime[2]}")
+                st.write(f"**Episodes Watched:** {anime[3]}")
+                st.write(f"**Status:** {anime[4]}")
+                st.write(f"**Genre:** {anime[5]}")
+                st.write(f"**Total Episodes:** {anime[6]}")
+                st.write(f"**Year of Release:** {anime[7]}")
+                st.write(f"**Rating:** {anime[8]}")
+                st.markdown("---")
+        else:
+            st.info("No watched anime found.")
+
+    elif selected_option == "Get Planned Anime":
+        st.subheader("Planned Anime")
+        planned_anime = user.get_planned_anime(st.session_state.username)
+        if planned_anime:
+            for anime in planned_anime:
+                st.write(f"**Title:** {anime[2]}")
+                st.write(f"**Genre:** {anime[5]}")
+                st.write(f"**Total Episodes:** {anime[6]}")
+                st.write(f"**Year of Release:** {anime[7]}")
+                st.write(f"**Rating:** {anime[8]}")
+                st.markdown("---")
+        else:
+            st.info("No planned anime found.")

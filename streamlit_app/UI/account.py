@@ -84,10 +84,12 @@ def my_account():
                 st.subheader("🔒 Logout")
                 st.write("Click the button below to log out.")
                 if st.button("Logout"):
-                    st.session_state.logged_in = False
-                    st.session_state.username = None
-                    st.success("Logged out.")
-                    st.rerun()
+                    with st.spinner("Logging out..."):
+                        time.sleep(2)
+                        st.session_state.logged_in = False
+                        st.session_state.username = None
+                        st.success("Logged out successfully.")
+                        st.rerun()
         
 
     else:

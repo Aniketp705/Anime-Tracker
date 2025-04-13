@@ -150,4 +150,19 @@ def add_anime(username, title, episodes_watched, status, genre, total_eps, year,
     except Exception as e:
         return False, f"Error: {str(e)}"
 
+#get all the watched anime of the user
+def get_watched_anime(username):
+    cursor.execute('''
+        SELECT * FROM user_anime WHERE username = ? AND status = 'Completed'
+    ''', (username,))
+    anime = cursor.fetchall()
+    return anime
+
+#get all the planned anime of the user
+def get_planned_anime(username):
+    cursor.execute('''
+        SELECT * FROM user_anime WHERE username = ? AND status = 'Plan to Watch'
+    ''', (username,))
+    anime = cursor.fetchall()
+    return anime
 
