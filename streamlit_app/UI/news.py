@@ -51,10 +51,10 @@ def app():
             anime_news.delete_news()
             news_scraper.fetch_and_store_news()
             # time.sleep(1)
-
-        # Get fresh news and store in session
-        st.session_state.news = anime_news.get_news()
-        st.rerun()  # Force a rerun to display the updated news
+            # Get fresh news and store in session
+            st.session_state.news = anime_news.get_news()
+            st.rerun()  # Force a rerun to display the updated news
+        
 
     # Display the news from session state
     if st.session_state.news:
