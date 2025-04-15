@@ -26,6 +26,19 @@ def app():
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             font-weight: 600;
         }
+        /* Remove or comment out the hover effect on the news-box */
+        /* .news-box:hover {
+        background-color: #ffffff20;
+        transition: background-color 0.3s ease;
+        } */
+        .news-box a {
+            text-decoration: none;
+            color: #fce4ec;
+            transition: color 0.2s ease; /* Add transition for smooth color change */
+        }
+        .news-box a:hover {
+            color: #6495ED; /* Cornflower Blue */
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -48,7 +61,7 @@ def app():
         for i, (title, url) in enumerate(st.session_state.news[:10], start=1):
             st.markdown(f'''
                 <div class="news-box">
-                    {i}. <a href="{url}" target="_blank" style="text-decoration: none; color: #e73c7e;">{title}</a>
+                    {i}. <a href="{url}" target="_blank">{title}</a>
                 </div>
             ''', unsafe_allow_html=True)
             time.sleep(0.1)

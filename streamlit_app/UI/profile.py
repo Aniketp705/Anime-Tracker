@@ -1,6 +1,8 @@
 import streamlit as st
 import sys, os, io, base64
 from PIL import Image
+import requests
+import time
 
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -23,7 +25,7 @@ def show_profile():
     # Convert image to base64 for HTML embedding
     img_base64 = base64.b64encode(profile_pic_data).decode()
 
-    # CSS styling for the profile image
+    # CSS styling for the profile image and watched anime list
     st.markdown("""
         <style>
         .profile-pic {
@@ -50,6 +52,38 @@ def show_profile():
             display: flex;
             justify-content: center;
         }
+        /* Style for watched anime list items */
+        .watched-anime-item {
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            background-color: #fce4ec;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        .watched-anime-image {
+        height: 300px;
+        border-radius: 10px;
+        object-fit: cover;
+        margin-right: 15px;
+        margin-top: 10px;
+        vertical-align: top; /* Align image with text */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .watched-anime-details {
+            flex-grow: 1;
+        }
+        .watched-anime-details h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .watched-anime-details p {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 3px;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -74,12 +108,12 @@ def show_profile():
     # Section to update profile picture
     st.markdown("---")
     options = ["Change Profile Picture", "Get Watched Anime", "Get Planned Anime"]
-    selected_option = selected_option = st.selectbox(
-                " ",  # Hide label
-                options,
-                index=0,
-                placeholder="Select an option"
-            )
+    selected_option = st.selectbox(
+        " ",  # Hide label
+        options,
+        index=0,
+        placeholder="Select an option"
+    )
 
     if selected_option == "Change Profile Picture":
         st.subheader("Update Profile Picture")
@@ -96,13 +130,48 @@ def show_profile():
         watched_anime = user.get_watched_anime(st.session_state.username)
         if watched_anime:
             for anime in watched_anime:
-                st.write(f"**Title:** {anime[2]}")
-                st.write(f"**Episodes Watched:** {anime[3]}")
-                st.write(f"**Status:** {anime[4]}")
-                st.write(f"**Genre:** {anime[5]}")
-                st.write(f"**Total Episodes:** {anime[6]}")
-                st.write(f"**Year of Release:** {anime[7]}")
-                st.write(f"**Rating:** {anime[8]}")
+                title = anime[2]
+                episodes_watched = anime[3]
+                status = anime[4]
+                genre = anime[5]
+                total_episodes = anime[6]
+                year = anime[7]
+                rating = anime[8]
+
+                # Fetch anime details from Jikan API for image
+                search_url = f"https://api.jikan.moe/v4/anime?q={title}&limit=1&sfw"
+                try:
+                    response = requests.get(search_url, timeout=10)
+                    time.sleep(0.3)  # Be mindful of API rate limits
+                    if response.status_code == 200:
+                        data = response.json().get("data", [])
+                        image_url = data[0].get("images", {}).get("jpg", {}).get("image_url", "https://via.placeholder.com/80x120?text=No+Image") if data else "https://via.placeholder.com/80x120?text=No+Image"
+                    else:
+                        image_url = "https://via.placeholder.com/80x120?text=No+Image"
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Error fetching image for {title}: {e}")
+                    image_url = "https://via.placeholder.com/80x120?text=No+Image"
+
+                with st.container():
+                    st.markdown('<div class="watched-anime-item">', unsafe_allow_html=True)
+                    col_img, col_details = st.columns([1, 4])
+
+                    with col_img:
+                        st.markdown(f'<img src="{image_url}" class="watched-anime-image">', unsafe_allow_html=True)
+
+                    with col_details:
+                        st.markdown(f'<div class="watched-anime-details">', unsafe_allow_html=True)
+                        st.markdown(f"<h4>{title}</h4>", unsafe_allow_html=True)
+                        st.markdown(f"<p><strong>Status:</strong> {status}</p>", unsafe_allow_html=True)
+                        st.markdown(f"<p><strong>Episodes Watched:</strong> {episodes_watched}{f'/{total_episodes}' if total_episodes else ''}</p>", unsafe_allow_html=True)
+                        if genre:
+                            st.markdown(f"<p><strong>Genre:</strong> {genre}</p>", unsafe_allow_html=True)
+                        if year:
+                            st.markdown(f"<p><strong>Year:</strong> {year}</p>", unsafe_allow_html=True)
+                        if rating:
+                            st.markdown(f"<p><strong>Rating:</strong> {rating}</p>", unsafe_allow_html=True)
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
                 st.markdown("---")
         else:
             st.info("No watched anime found.")

@@ -8,22 +8,6 @@ from database import user
 # Initialize the database
 user.create_table()
 
-st.markdown("""
-        <style>
-        .menu-box{
-            background-color: #1f1f2e;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin-top: 10px;
-        }
-        .centered {
-            display: flex;
-            justify-content: center;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
 
 def my_account():
     st.title("👤 My Account")

@@ -48,21 +48,6 @@ def get_user_id(username):
     result = cursor.fetchone()
     return result[0] if result else None
 
-#create a table for watched anime
-def add_anime(username, title, episodes_watched, status, genre, total_episodes, year, rating):
-    user_id = get_user_id(username)
-    if not user_id:
-        return False, "User not found."
-
-    try:
-        cursor.execute('''
-            INSERT INTO user_anime (user_id, anime_title, episodes_watched, status, genre, total_episodes, year, rating)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (user_id, title, episodes_watched, status, genre, total_episodes, year, rating))
-        conn.commit()
-        return True, f"{title} added successfully."
-    except Exception as e:
-        return False, f"Failed to add anime: {e}"
 
 
 
