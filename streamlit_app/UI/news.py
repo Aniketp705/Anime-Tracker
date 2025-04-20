@@ -53,6 +53,7 @@ def app():
             # time.sleep(1)
             # Get fresh news and store in session
             st.session_state.news = anime_news.get_news()
+            time.sleep(1)
             st.rerun()  # Force a rerun to display the updated news
         
 

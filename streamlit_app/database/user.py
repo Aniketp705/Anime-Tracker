@@ -151,3 +151,42 @@ def get_planned_anime(username):
     anime = cursor.fetchall()
     return anime
 
+#get all the watching anime of the user
+def get_watching_anime(username):
+    cursor.execute('''
+        SELECT * FROM user_anime WHERE username = ? AND status = 'Watching'
+    ''', (username,))
+    anime = cursor.fetchall()
+    return anime
+
+# ... (other database functions like create_table, add_user, find_user, etc.)
+
+def update_watched_anime(username, anime_title, episodes_watched, status):
+    """Updates the episodes watched and status for a user's anime."""
+    try:
+        cursor.execute('''
+            UPDATE user_anime
+            SET episodes_watched = ?, status = ?
+            WHERE username = ? AND anime_title = ?
+        ''', (episodes_watched, status, username, anime_title))
+        conn.commit()
+        return True, "Update successful."
+    except Exception as e:
+        # It's good practice to log the actual error for debugging
+        print(f"Database error updating anime progress for user {username}, anime {anime_title}: {e}")
+        return False, f"An error occurred during the update: {e}"
+    
+#delete the anime from the db
+def delete_anime(username, anime_title):
+    """Deletes a user's anime from the database."""
+    try:
+        cursor.execute('''
+            DELETE FROM user_anime
+            WHERE username = ? AND anime_title = ?
+        ''', (username, anime_title))
+        conn.commit()
+        return True, "Anime deleted successfully."
+    except Exception as e:
+        # It's good practice to log the actual error for debugging
+        print(f"Database error deleting anime for user {username}, anime {anime_title}: {e}")
+        return False, f"An error occurred during deletion: {e}"
