@@ -185,6 +185,7 @@ def show_profile():
                 # Assuming add_profile_pic handles the database update
                 user.add_profile_pic(st.session_state.username, uploaded_file_bytes)
                 st.success("Profile picture updated successfully!")
+                time.sleep(0.2)
                 st.rerun() # Rerun to display the new picture
 
     elif selected_option == "My Anime Lists":

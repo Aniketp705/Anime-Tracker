@@ -223,9 +223,9 @@ def show_anime_page():
                       # Unique key for each button is essential
                       button_key = f"select_{mal_id}_{i}"
                       if st.button("Add to my list", key=button_key):
-                          st.session_state.selected_anime = anime_result # Store the chosen anime
-                          st.session_state.show_search_results = False # Hide the results list
-                          st.rerun() # Rerun to show the selected anime details/form
+                           st.session_state.selected_anime = anime_result # Store the chosen anime
+                           st.session_state.show_search_results = False # Hide the results list
+                           st.rerun() # Rerun to show the selected anime details/form
                       st.markdown('</div>', unsafe_allow_html=True) # End details container
 
                  st.markdown('</div>', unsafe_allow_html=True) # End item container
@@ -284,8 +284,29 @@ def show_anime_page():
                 value=0, # Default value
                 step=1
             )
+
+            # Determine default status based on episodes watched
+            default_status = "Watching" # Default status
+            if isinstance(total_eps, int) and total_eps > 0 and episodes_watched >= total_eps:
+                default_status = "Completed"
+            elif episodes_watched == 0:
+                default_status = "Plan to Watch" # If 0 episodes, default to Plan to Watch
+
+
             status_options = ["Watching", "Completed", "On-Hold", "Dropped", "Plan to Watch"]
-            status_selected = st.selectbox("Status", status_options)
+            # Find the index of the default status to pre-select the selectbox
+            # Use try-except in case default_status is not in status_options (unlikely with current logic but safe)
+            try:
+                default_index = status_options.index(default_status)
+            except ValueError:
+                 default_index = 0 # Default to the first option if status is unexpected
+
+
+            status_selected = st.selectbox(
+                "Status",
+                status_options,
+                index=default_index # Pre-select based on episodes watched
+            )
             submitted = st.form_submit_button("Add to My Anime")
 
             if submitted:
@@ -296,7 +317,7 @@ def show_anime_page():
                         current_username,
                         title, # Use title from selected anime
                         episodes_watched,
-                        status_selected, # Use the selected status
+                        status_selected, # Use the selected status (which is pre-selected but can be changed)
                         genres if genres != "N/A" else "", # Pass cleaned genres
                         total_eps if total_eps else None, # Pass None if unknown
                         year if year != "Unknown" else None, # Pass None if unknown
@@ -324,5 +345,4 @@ def show_anime_page():
                 # Set the flag to clear input on the next run
                 st.session_state.clear_search_input_on_next_run = True
                 st.rerun() # Rerun to apply state changes
-
 

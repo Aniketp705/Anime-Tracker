@@ -58,6 +58,7 @@ def my_account():
                     with st.spinner("Deleting account..."):
                         time.sleep(2)
                         user.delete_user(st.session_state.username)
+                        user.delete_all_anime(st.session_state.username)
                         st.success("Account deleted.")
                     time.sleep(1)
                     st.session_state.logged_in = False

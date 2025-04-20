@@ -190,3 +190,11 @@ def delete_anime(username, anime_title):
         # It's good practice to log the actual error for debugging
         print(f"Database error deleting anime for user {username}, anime {anime_title}: {e}")
         return False, f"An error occurred during deletion: {e}"
+    
+
+#remove all the anime of an user
+def delete_all_anime(username):
+    cursor.execute('''
+        DELETE FROM user_anime WHERE username = ?
+    ''', (username,))
+    conn.commit()
