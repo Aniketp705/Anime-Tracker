@@ -11,12 +11,13 @@ import sys
 from database import anime_news
 
 
+
 def fetch_and_store_news():
     anime_news.create_table()
 
     chrome_options = Options()
     chrome_options.add_argument("--headless")
-    service = Service('streamlit_app/scraper/chromedriver.exe')
+    service = Service(executable_path="streamlit_app/scraper/chromedriver.exe")
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     driver.get('https://www.cbr.com/category/anime-news/')
