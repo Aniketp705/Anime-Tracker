@@ -134,6 +134,14 @@ def add_anime(username, title, episodes_watched, status, genre, total_eps, year,
 
     except Exception as e:
         return False, f"Error: {str(e)}"
+    
+#get all the anime of the user
+def get_all_anime(username):
+    cursor.execute('''
+        SELECT anime_title,episodes_watched,genre,added_at FROM user_anime WHERE username = ?
+    ''', (username,))
+    anime = cursor.fetchall()
+    return anime
 
 #get all the watched anime of the user
 def get_watched_anime(username):
@@ -176,8 +184,9 @@ def update_watched_anime(username, anime_title, episodes_watched, status):
         print(f"Database error updating anime progress for user {username}, anime {anime_title}: {e}")
         return False, f"An error occurred during the update: {e}"
     
+    
 #delete the anime from the db
-def delete_anime(username, anime_title):
+def delete_user_anime(username, anime_title):
     """Deletes a user's anime from the database."""
     try:
         cursor.execute('''
@@ -198,3 +207,5 @@ def delete_all_anime(username):
         DELETE FROM user_anime WHERE username = ?
     ''', (username,))
     conn.commit()
+
+

@@ -1,12 +1,11 @@
 import streamlit as st
 import sys, os, io, base64
+from collections import defaultdict
+import pandas as pd
+import plotly.express as px 
 from PIL import Image
 import requests
 import time
-
-# Assuming 'user' object with methods like find_user, add_profile_pic,
-# get_watched_anime, get_planned_anime, get_watching_anime, and update_watched_anime
-# is available globally from the database module
 from database import user
 
 
@@ -166,7 +165,7 @@ def show_profile():
     # Section for profile actions
     st.markdown("---")
     # Consolidating watched/planned/watching under "My Anime Lists"
-    options = ["Change Profile Picture", "My Anime Lists"] # Removed "Get Watched Anime", "Get Planned Anime"
+    options = ["Change Profile Picture", "My Anime Lists", "My Stats"] # Removed "Get Watched Anime", "Get Planned Anime"
     selected_option = st.selectbox(
         "Select Action:",  # Added a clearer label
         options,
@@ -235,13 +234,16 @@ def show_profile():
 
 
                     # --- Fetch anime details from Jikan API for image ---
+                    # Use the title from the database to search Jikan
+                    # Use requests.utils.quote to handle special characters in the title
                     search_url = f"https://api.jikan.moe/v4/anime?q={requests.utils.quote(title)}&limit=1&sfw"
                     image_url = "https://via.placeholder.com/150x200?text=No+Image" # Default placeholder image
 
                     try:
+                        # Use a shorter timeout for quicker response or failure
                         response = requests.get(search_url, timeout=5)
                         # Add a small delay to respect API rate limits, especially in a loop
-                        time.sleep(0.5)
+                        time.sleep(0.2) # Reduced sleep slightly, adjust if rate limited
 
                         if response.status_code == 200:
                             data = response.json().get("data", [])
@@ -255,30 +257,29 @@ def show_profile():
                                 if found_image_url:
                                      image_url = found_image_url
                                 else:
-                                     st.warning(f"Image URL not found in Jikan API response for {title}.")
+                                     st.warning(f"Image URL not found in Jikan API response for '{title}'.")
                             else:
                                 # No results found for the title
                                 st.info(f"No detailed anime data found on Jikan for title: '{title}'. Displaying basic info from your list.", icon="🔍")
 
 
                         elif response.status_code == 429:
-                             st.warning(f"Rate limited by Jikan API while fetching image for {title}. Please wait a moment.")
+                             st.warning(f"Rate limited by Jikan API while fetching image for '{title}'. Please wait a moment and try again.", icon="⏳")
                              # Consider adding more robust rate limit handling if this is common
-                             # For now, just skip image fetching for this item if rate limited
                              image_url = "https://via.placeholder.com/150x200?text=Rate+Limited"
 
                         else:
-                            st.warning(f"Could not fetch image for {title} from Jikan API. Status: {response.status_code}")
+                            st.warning(f"Could not fetch image for '{title}' from Jikan API. Status: {response.status_code}", icon="⚠️")
                             # Log the error response content for debugging if needed
-                            # print(f"Jikan API Error Response for {title}: {response.text}")
+                            # print(f"Jikan API Error Response for '{title}': {response.text}")
 
 
                     except requests.exceptions.RequestException as e:
-                         st.warning(f"Network error fetching image for {title}: {e}")
+                         st.warning(f"Network error fetching image for '{title}': {e}", icon="❌")
                     except KeyError:
-                        st.warning(f"Unexpected data structure in Jikan API response for {title}.")
+                        st.warning(f"Unexpected data structure in Jikan API response for '{title}'.", icon="⚠️")
                     except Exception as e:
-                         st.warning(f"An unexpected error occurred fetching image for {title}: {e}")
+                         st.warning(f"An unexpected error occurred fetching image for '{title}': {e}", icon="❗")
 
 
                     # --- Display each anime item ---
@@ -321,78 +322,76 @@ def show_profile():
                         st.markdown('</div>', unsafe_allow_html=True) # End anime-list-details
 
 
-                    # --- Conditional Update Controls (Only for "Watching" list) ---
+                    # --- Conditional Update and Delete Controls (Only for "Watching" list) ---
                     if list_type == "Watching":
                          with col_update: # Column for update controls
                               st.markdown("<h5>Update Progress</h5>", unsafe_allow_html=True)
                               # Use a unique key based on anime_id and list type for uniqueness across reruns and items
-                              # anime_id from database should be unique per entry
-                              update_key = f"ep_input_{anime_id}_{list_type}" # Using only anime_id and list_type for key
-                              # Ensure the value is not None, default to 0 if None
+                              update_key = f"ep_input_{anime_id}_{list_type}"
                               current_episodes_watched_safe = current_episodes_watched if current_episodes_watched is not None else 0
 
                               new_episodes = st.number_input(
                                   "Episodes",
                                   min_value=0,
-                                  # Set max episodes if total_episodes is a positive integer, otherwise a large number
                                   max_value=total_episodes if isinstance(total_episodes, int) and total_episodes is not None and total_episodes > 0 else 5000,
-                                  value=current_episodes_watched_safe, # Use the safe value
+                                  value=current_episodes_watched_safe,
                                   step=1,
-                                  key=update_key # Unique key for this widget
+                                  key=update_key
                               )
 
-                              # Use a unique key for the button
-                              button_key = f"update_btn_{anime_id}_{list_type}"
-                              update_button = st.button("Update", key=button_key)
+                              # Use a unique key for the Update button
+                              update_button_key = f"update_btn_{anime_id}_{list_type}"
+                              update_button = st.button("Update", key=update_button_key)
 
-
+                              # --- Handle update logic ---
                               if update_button:
                                    new_status = status # Start with the current status
 
                                    # Logic to determine new status when updating from "Watching"
                                    if isinstance(total_episodes, int) and total_episodes is not None and total_episodes > 0 and new_episodes >= total_episodes:
                                        new_status = "Completed"
-                                   elif new_episodes == 0 and status != "Plan to Watch":
-                                        # If episodes reset to 0 and it wasn't Plan to Watch, maybe change to Dropped or Plan to Watch?
-                                        # Let's default to keeping the status unless it's completed or moves from Plan to Watch
-                                        pass # Keep current status
                                    elif new_episodes > 0 and status == "Plan to Watch":
-                                        # If it was planned and episodes are added, it's now being watched
-                                        new_status = "Watching"
+                                       new_status = "Watching"
                                    elif new_episodes > 0 and status == "Completed":
-                                        # If episodes are updated on a completed anime, but not all episodes are watched anymore, it's watching
-                                        if isinstance(total_episodes, int) and total_episodes is not None and total_episodes > 0 and new_episodes < total_episodes:
-                                            new_status = "Watching"
-                                        # If episodes are updated but still >= total, status remains Completed
-                                        pass # Keep current status if completed and still >= total
+                                       if isinstance(total_episodes, int) and total_episodes is not None and total_episodes > 0 and new_episodes < total_episodes:
+                                           new_status = "Watching"
+                                   # If episodes become 0, user might intend to Plan to Watch or Drop, keep current status unless completed
+                                   elif new_episodes == 0 and status != "Plan to Watch":
+                                        pass # Keep status unless it was Plan to Watch
 
                                    # Call the database function to update the record
-                                   # Assume user.update_watched_anime exists and takes (username, anime_title, episodes_watched, status)
                                    success, message = user.update_watched_anime(
-                                       st.session_state.username, # Pass the logged-in username
-                                       title, # Pass the anime title from the database
-                                       new_episodes, # Pass the new value from the number input
-                                       new_status # Pass the determined new status
+                                       st.session_state.username,
+                                       title,
+                                       new_episodes,
+                                       new_status
                                    )
 
                                    if success:
                                        st.success(f"Updated progress for '{title}' to {new_episodes} episodes. Status: {new_status}.", icon="✅")
-                                       st.rerun() # Trigger a rerun to refresh the displayed list with updated data
+                                       st.rerun()
                                    else:
                                        st.error(f"Failed to update progress for '{title}': {message}", icon="❌")
 
+                              # --- Add the Delete button ---
+                              # Place it within the update column below the update button
+                              delete_button_key = f"delete_btn_{anime_id}_{list_type}"
+                              delete_button = st.button("Drop Anime", key=delete_button_key)
 
-                               # Optional: Add a delete button for Watching list items
-                               # delete_button = st.button("Delete", key=f"delete_btn_{anime_id}_{list_type}")
-                               # if delete_button:
-                               #     # Call a delete function in database.py (you'll need to create this)
-                               #     # Assumes delete by anime_id for better precision
-                               #     success, message = user.delete_user_anime(anime_id) # Pass anime_id
-                               #     if success:
-                               #         st.success(f"Removed '{title}' from your list.", icon="🗑️")
-                               #         st.rerun()
-                               #     else:
-                               #         st.error(f"Failed to remove '{title}': {message}", icon="❌")
+                              # --- Handle delete logic ---
+                              if delete_button:
+                                   # Call a delete function in database.py (you'll need to create this)
+                                   # It's best to delete by a unique identifier like anime_id and username
+                                   # Assuming user.delete_user_anime exists and takes (username, anime_id) or (username, anime_title)
+                                   # Using anime_id is more reliable if titles aren't guaranteed unique per user
+                                   # Assuming your delete function is user.delete_user_anime(username, anime_title) based on previous
+                                   success, message = user.delete_user_anime(st.session_state.username, title) # Pass username and title
+
+                                   if success:
+                                       st.success(f"Removed '{title}' from your list.", icon="🗑️")
+                                       st.rerun()
+                                   else:
+                                       st.error(f"Failed to remove '{title}': {message}", icon="❌")
 
 
                     st.markdown('</div>', unsafe_allow_html=True) # End anime-list-item container
@@ -400,4 +399,77 @@ def show_profile():
 
         else:
             st.info(f"No {list_type.lower()} anime found in your list.", icon="ℹ️")
+    
+    elif selected_option == "My Stats":
+        st.subheader("📊 Your Anime Stats")
+
+        # Fetch user anime data
+        user_data = user.get_all_anime(st.session_state.username)
+
+        # store genres in a dictionary
+        genres = defaultdict(int)
+
+        # user_data is a list of tuples (anime_title, episodes_watched, genre, added_at)
+        for anime in user_data:
+            genre_list = anime[2].split(",")
+            for genre in genre_list:
+                genres[genre.strip()] += 1
+
+        # get total episodes watched
+        total_episodes_watched = sum([anime[1] for anime in user_data ])
+        # get total anime watched
+        total_anime_watched = len(user_data)
+
+        # store the data in a dataframe
+        genre_df = pd.DataFrame(list(genres.items()), columns=["Genre", "Count"])
+        genre_df = genre_df.sort_values(by="Count", ascending=False)
+
+        if user_data:
+            # total_watched = len(user_data)
+            # genre_items = ""
+            # for genre, count in genres.items():
+            #     genre_items += f"<li>{genre}: {count}</li>"
+
+
+            # st.markdown(f"""
+            #     <div style='background-color:#1f1f2e; padding:20px; border-radius:10px; color:white;'>
+            #         <h3>📈 Summary</h3>
+            #         <h3><strong>Genres:</strong></h3>
+            #         <ul style = padding-left: 20px;>
+            #             {genre_items}
+            #         </ul>
+            #     </div>
+            # """, unsafe_allow_html=True)
+
+            # Plotting the genre distribution
+            fig = px.bar(
+                genre_df,
+                x = "Genre",
+                y = "Count",
+                color = "Genre",
+                title = "Anime Genre Distribution",
+                labels = {"Genre": "Genre", "Count": "Number of Anime"},
+                template = "plotly_dark",
+            )
+            st.plotly_chart(fig, use_container_width=True)
+
+            # Display total episodes watched
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+                    <div ">
+                        <h5>Total Episodes Watched</h5>
+                        <p>{total_episodes_watched}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+            with col2:
+                st.markdown(f"""
+                    <div ">
+                        <h5>Total Anime Watched</h5>
+                        <p>{total_anime_watched}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.warning("No anime data found for your account.")
+
 

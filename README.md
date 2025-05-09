@@ -66,6 +66,8 @@ Welcome to **Anime Tracker**, your ultimate companion for managing and exploring
 4. **Run the Streamlit App**:
     ```bash
     streamlit run streamlit_app/main.py
+    ```
+    Note: run the app from the root directory to avoid any issues while importing the libraries.
 5. Enjoy exploring and managing you anime world!
 
 <!-- ## 📁 Project Structure
