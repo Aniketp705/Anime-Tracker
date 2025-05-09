@@ -441,6 +441,23 @@ def show_profile():
             #     </div>
             # """, unsafe_allow_html=True)
 
+            # Display total episodes watched
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(f"""
+                    <div ">
+                        <h4>Total Episodes Watched</h4>
+                        <h5 style = "color:aliceblue">{total_episodes_watched}</h5>
+                    </div>
+                """, unsafe_allow_html=True)
+            with col2:
+                st.markdown(f"""
+                    <div >
+                        <h4 >Total Anime Watched</h4>
+                        <h5 style = "color:aliceblue">{total_anime_watched}</h5>
+                    </div>
+                """, unsafe_allow_html=True)
+
             # Plotting the genre distribution
             fig = px.bar(
                 genre_df,
@@ -453,22 +470,6 @@ def show_profile():
             )
             st.plotly_chart(fig, use_container_width=True)
 
-            # Display total episodes watched
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"""
-                    <div ">
-                        <h5>Total Episodes Watched</h5>
-                        <p>{total_episodes_watched}</p>
-                    </div>
-                """, unsafe_allow_html=True)
-            with col2:
-                st.markdown(f"""
-                    <div ">
-                        <h5>Total Anime Watched</h5>
-                        <p>{total_anime_watched}</p>
-                    </div>
-                """, unsafe_allow_html=True)
         else:
             st.warning("No anime data found for your account.")
 
