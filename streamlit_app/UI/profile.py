@@ -2,7 +2,7 @@ import streamlit as st
 import sys, os, io, base64
 from collections import defaultdict
 import pandas as pd
-import plotly.express as px 
+import plotly.express as px
 from PIL import Image
 import requests
 import time
@@ -12,27 +12,24 @@ from database import user
 def show_profile():
 
     # Find the user
-    # Ensure st.session_state.username is set correctly before this page loads
     if "username" not in st.session_state or st.session_state.username is None:
         st.error("User not logged in. Please log in to view your profile.")
-        return # Exit the function if user is not logged in
+        return
 
     user_data = user.find_user(st.session_state.username)
 
     if user_data is None:
         st.error("User data not found. Please try logging in again.")
-        # Consider adding a logout action here
         return
 
 
     # Load the profile pic
-    # Assuming user_data[4] is the profile picture data (BLOB)
     profile_pic_data = None
-    if user_data and user_data[4]:
+    if user_data and len(user_data) > 4 and user_data[4]:
         profile_pic_data = user_data[4]
 
     # If no profile pic data, try loading the blank one
-    if profile_pic_data is None:
+    if profile_pic_data is None or profile_pic_data == b"":
         blank_profile_path = "streamlit_app/assets/profile_pics/blankprofile.png"
         if os.path.exists(blank_profile_path):
             try:
@@ -40,15 +37,15 @@ def show_profile():
                     profile_pic_data = f.read()
             except Exception as e:
                 st.warning(f"Could not load blank profile picture: {e}")
-                profile_pic_data = b"" # Use empty bytes on error
+                profile_pic_data = b""
         else:
             st.warning(f"Blank profile picture not found at {blank_profile_path}")
-            profile_pic_data = b"" # Use empty bytes if file not found
+            profile_pic_data = b""
 
 
     # Convert image to base64 for HTML embedding
     img_base64 = ""
-    if profile_pic_data:
+    if profile_pic_data and profile_pic_data != b"":
         try:
             img_base64 = base64.b64encode(profile_pic_data).decode()
         except Exception as e:
@@ -78,60 +75,111 @@ def show_profile():
             border-radius: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-top: 10px;
+             color: white;
+        }
+        .profile-box h3 {
+             color: #fce4ec;
+             margin-top: 0;
+             margin-bottom: 15px;
+        }
+        .profile-box p strong {
+             color: #fce4ec;
         }
         .centered {
             display: flex;
             justify-content: center;
         }
-        /* Style for anime list items (used for Watching, Completed, Planned) */
+        /* Style for anime list items */
         .anime-list-item {
             border-radius: 10px;
             padding: 10px;
             margin-bottom: 10px;
             display: flex;
             align-items: flex-start;
-            background-color: #fce4ec; /* Light pink background */
+            background-color: #fce4ec;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
          .anime-list-item:hover {
-             background-color: #f0f0f0; /* Slightly lighter on hover */
+             background-color: #f0f0f0;
          }
         .anime-list-image {
-            height: 300px; /* Keep your desired height */
+            height: 300px;
             border-radius: 10px;
             object-fit: cover;
             margin-right: 15px;
             margin-top: 10px;
-            vertical-align: top; /* Align image with text */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            vertical-align: top;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .anime-list-details {
             flex-grow: 1;
-            color: #333; /* Darker text for readability on light background */
+            color: #333;
         }
         .anime-list-details h4 {
             margin-top: 0;
             margin-bottom: 5px;
-            color: #1f1f2e; /* Darker title */
+            color: #1f1f2e;
         }
         .anime-list-details p {
             font-size: 0.9em;
-            color: #555; /* Slightly darker details */
+            color: #555;
             margin-bottom: 3px;
         }
-         /* Style for the update progress section */
+        /* Style for the update progress section */
         .update-progress-section {
-            background-color: #ffffff; /* White background */
             padding: 10px;
             border-radius: 8px;
-            margin-top: 10px;
+            margin-top: 0px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
          .update-progress-section h5 {
-             color: #1f1f2e; /* Dark title for update section */
+             color: #1f1f2e;
              margin-top: 0;
              margin-bottom: 10px;
          }
+
+        .stSelectbox label {
+            font-size: 1.1em; /* Increase label font size */
+            font-weight: bold; /* Make labels bold for prominence */
+            color: #fce4ec; /* Optional: Match your theme's accent color */
+        }
+
+        /* Target the container that displays the selected value */
+        /* This selector targets the div within the selectbox that shows the currently chosen option */
+        /* You might need to inspect the HTML in your browser's developer tools if this selector doesn't work */
+        .stSelectbox div[data-baseweb="select"] > div:first-child {
+             font-size: 1.1em; /* Increase font size of the selected value */
+             /* You can add other styles here like color if needed */
+        }
+        .anime-list-item .stButton button[key^="delete_btn_"]:hover {
+            background-color: #d32f2f;
+            color: white !important;
+        }
+
+        /* Adjust styling for Streamlit number input within the update column */
+         .anime-list-item .stNumberInput {
+             margin-bottom: 10px;
+         }
+
+         /* Adjust styling for Streamlit update button within the update column */
+         .anime-list-item .stButton button[key^="update_btn_"] {
+              background-color: #4CAF50;
+              color: white !important;
+              font-weight: bold;
+              padding: 8px 15px;
+              border-radius: 5px;
+              border: none;
+              transition: background-color 0.3s ease;
+              margin-top: 5px;
+              width: 100%;
+              display: inline-block;
+              text-align: center;
+         }
+         .anime-list-item .stButton button[key^="update_btn_"]:hover {
+             background-color: #45a049;
+             color: white !important;
+         }
+
         </style>
     """, unsafe_allow_html=True)
 
@@ -164,10 +212,9 @@ def show_profile():
 
     # Section for profile actions
     st.markdown("---")
-    # Consolidating watched/planned/watching under "My Anime Lists"
-    options = ["Change Profile Picture", "My Anime Lists", "My Stats"] # Removed "Get Watched Anime", "Get Planned Anime"
+    options = ["Change Profile Picture", "My Anime Lists", "My Stats"]
     selected_option = st.selectbox(
-        "Select Action:",  # Added a clearer label
+        "Select Action:",
         options,
         index=0,
         placeholder="Select an option"
@@ -179,13 +226,11 @@ def show_profile():
 
         if uploaded_pic:
             if st.button("Confirm Update"):
-                # Read the uploaded file content
                 uploaded_file_bytes = uploaded_pic.read()
-                # Assuming add_profile_pic handles the database update
                 user.add_profile_pic(st.session_state.username, uploaded_file_bytes)
                 st.success("Profile picture updated successfully!")
                 time.sleep(0.2)
-                st.rerun() # Rerun to display the new picture
+                st.rerun()
 
     elif selected_option == "My Anime Lists":
         st.subheader("Your Anime Lists")
@@ -201,28 +246,22 @@ def show_profile():
             anime_list = user.get_watched_anime(st.session_state.username)
         elif list_type == "Plan to Watch":
              anime_list = user.get_planned_anime(st.session_state.username)
-        # Add conditions for "On-Hold" and "Dropped" if you have corresponding DB functions
-        # elif list_type == "On-Hold":
-        #      anime_list = user.get_on_hold_anime(st.session_state.username)
-        # elif list_type == "Dropped":
-        #      anime_list = user.get_dropped_anime(st.session_state.username)
 
 
-        st.write(f"### {list_type} Anime") # Dynamic subheader for the list
+        st.write(f"### {list_type} Anime")
 
         if anime_list:
-            # Use a container for the list itself. No key needed for this container in older Streamlit.
+            # Use a container for the list itself.
             with st.container():
                 for i, anime in enumerate(anime_list):
-                    # Safely extract data using indices, check your database schema
+                    # Safely extract data using indices
                     try:
-                        # Assuming the order matches your user_anime table columns:
+                        # Assuming the order matches your user_anime table columns for these specific functions:
                         # (id, username, anime_title, episodes_watched, status, genre, total_episodes, year, rating, added_at)
-                        # Adjust indices if your table structure is different
                         anime_id = anime[0]
                         title = anime[2]
                         current_episodes_watched = anime[3]
-                        status = anime[4] # This will be the status for the current list type (e.g., 'Watching', 'Completed')
+                        status = anime[4]
                         genre = anime[5] if len(anime) > 5 and anime[5] is not None else "N/A"
                         total_episodes = anime[6] if len(anime) > 6 and anime[6] is not None else None
                         year = anime[7] if len(anime) > 7 and anime[7] is not None else "N/A"
@@ -230,26 +269,20 @@ def show_profile():
 
                     except IndexError:
                         st.error(f"Error: Database row structure unexpected for anime {i}. Skipping display for this item.")
-                        continue # Skip this anime if data structure is wrong
+                        continue
 
 
                     # --- Fetch anime details from Jikan API for image ---
-                    # Use the title from the database to search Jikan
-                    # Use requests.utils.quote to handle special characters in the title
                     search_url = f"https://api.jikan.moe/v4/anime?q={requests.utils.quote(title)}&limit=1&sfw"
-                    image_url = "https://via.placeholder.com/150x200?text=No+Image" # Default placeholder image
+                    image_url = "https://via.placeholder.com/150x200?text=No+Image"
 
                     try:
-                        # Use a shorter timeout for quicker response or failure
                         response = requests.get(search_url, timeout=5)
-                        # Add a small delay to respect API rate limits, especially in a loop
-                        time.sleep(0.2) # Reduced sleep slightly, adjust if rate limited
+                        time.sleep(0.2)
 
                         if response.status_code == 200:
                             data = response.json().get("data", [])
                             if isinstance(data, list) and data:
-                                # Get the image URL from the first result
-                                # Using image_url for potentially higher res, fallback to small_image_url if needed
                                 found_image_url = data[0].get("images", {}).get("jpg", {}).get("image_url")
                                 if not found_image_url:
                                      found_image_url = data[0].get("images", {}).get("jpg", {}).get("small_image_url")
@@ -259,19 +292,14 @@ def show_profile():
                                 else:
                                      st.warning(f"Image URL not found in Jikan API response for '{title}'.")
                             else:
-                                # No results found for the title
-                                st.info(f"No detailed anime data found on Jikan for title: '{title}'. Displaying basic info from your list.", icon="🔍")
-
+                                 st.info(f"No detailed anime data found on Jikan for title: '{title}'. Displaying basic info from your list.", icon="🔍")
 
                         elif response.status_code == 429:
                              st.warning(f"Rate limited by Jikan API while fetching image for '{title}'. Please wait a moment and try again.", icon="⏳")
-                             # Consider adding more robust rate limit handling if this is common
                              image_url = "https://via.placeholder.com/150x200?text=Rate+Limited"
 
                         else:
                             st.warning(f"Could not fetch image for '{title}' from Jikan API. Status: {response.status_code}", icon="⚠️")
-                            # Log the error response content for debugging if needed
-                            # print(f"Jikan API Error Response for '{title}': {response.text}")
 
 
                     except requests.exceptions.RequestException as e:
@@ -283,18 +311,15 @@ def show_profile():
 
 
                     # --- Display each anime item ---
-                    st.markdown('<div class="anime-list-item">', unsafe_allow_html=True) # Using general anime-list-item class
+                    st.markdown('<div class="anime-list-item">', unsafe_allow_html=True)
                     # Adjust column ratios based on whether update controls are shown
                     if list_type == "Watching":
-                         # Columns for [image, details, update controls]
                          col_img, col_details, col_update = st.columns([1, 3, 1.5])
                     else:
-                         # Columns for [image, details] - no update column for Completed/Planned/etc.
                          col_img, col_details = st.columns([1, 4])
 
 
                     with col_img:
-                        # Display the anime image
                         st.markdown(f'<img src="{image_url}" class="anime-list-image" alt="{title} thumbnail">', unsafe_allow_html=True)
 
 
@@ -304,7 +329,7 @@ def show_profile():
                         st.markdown(f"<p><strong>Status:</strong> {status}</p>", unsafe_allow_html=True)
 
                         # Only show episodes watched if it's a Watching or Completed list
-                        if list_type in ["Watching", "Completed", "On-Hold", "Dropped"]: # Display episodes for statuses that track progress
+                        if list_type in ["Watching", "Completed", "On-Hold", "Dropped"]:
                              episodes_display = f"{current_episodes_watched}"
                              if total_episodes is not None and total_episodes > 0:
                                  episodes_display += f" / {total_episodes}"
@@ -315,18 +340,16 @@ def show_profile():
                             st.markdown(f"<p><strong>Genre:</strong> {genre}</p>", unsafe_allow_html=True)
                         if year != "N/A":
                             st.markdown(f"<p><strong>Year:</strong> {year}</p>", unsafe_allow_html=True)
-                        # Display rating if available and greater than 0
                         if rating is not None and rating > 0:
                              st.markdown(f"<p><strong>Rating (MAL):</strong> {rating}</p>", unsafe_allow_html=True)
 
-                        st.markdown('</div>', unsafe_allow_html=True) # End anime-list-details
+                        st.markdown('</div>', unsafe_allow_html=True)
 
 
                     # --- Conditional Update and Delete Controls (Only for "Watching" list) ---
                     if list_type == "Watching":
-                         with col_update: # Column for update controls
+                         with col_update:
                               st.markdown("<h5>Update Progress</h5>", unsafe_allow_html=True)
-                              # Use a unique key based on anime_id and list type for uniqueness across reruns and items
                               update_key = f"ep_input_{anime_id}_{list_type}"
                               current_episodes_watched_safe = current_episodes_watched if current_episodes_watched is not None else 0
 
@@ -339,15 +362,12 @@ def show_profile():
                                   key=update_key
                               )
 
-                              # Use a unique key for the Update button
                               update_button_key = f"update_btn_{anime_id}_{list_type}"
                               update_button = st.button("Update", key=update_button_key)
 
-                              # --- Handle update logic ---
                               if update_button:
-                                   new_status = status # Start with the current status
+                                   new_status = status
 
-                                   # Logic to determine new status when updating from "Watching"
                                    if isinstance(total_episodes, int) and total_episodes is not None and total_episodes > 0 and new_episodes >= total_episodes:
                                        new_status = "Completed"
                                    elif new_episodes > 0 and status == "Plan to Watch":
@@ -355,11 +375,9 @@ def show_profile():
                                    elif new_episodes > 0 and status == "Completed":
                                        if isinstance(total_episodes, int) and total_episodes is not None and total_episodes > 0 and new_episodes < total_episodes:
                                            new_status = "Watching"
-                                   # If episodes become 0, user might intend to Plan to Watch or Drop, keep current status unless completed
                                    elif new_episodes == 0 and status != "Plan to Watch":
-                                        pass # Keep status unless it was Plan to Watch
+                                        pass
 
-                                   # Call the database function to update the record
                                    success, message = user.update_watched_anime(
                                        st.session_state.username,
                                        title,
@@ -374,18 +392,11 @@ def show_profile():
                                        st.error(f"Failed to update progress for '{title}': {message}", icon="❌")
 
                               # --- Add the Delete button ---
-                              # Place it within the update column below the update button
                               delete_button_key = f"delete_btn_{anime_id}_{list_type}"
                               delete_button = st.button("Drop Anime", key=delete_button_key)
 
-                              # --- Handle delete logic ---
                               if delete_button:
-                                   # Call a delete function in database.py (you'll need to create this)
-                                   # It's best to delete by a unique identifier like anime_id and username
-                                   # Assuming user.delete_user_anime exists and takes (username, anime_id) or (username, anime_title)
-                                   # Using anime_id is more reliable if titles aren't guaranteed unique per user
-                                   # Assuming your delete function is user.delete_user_anime(username, anime_title) based on previous
-                                   success, message = user.delete_user_anime(st.session_state.username, title) # Pass username and title
+                                   success, message = user.delete_user_anime(st.session_state.username, title)
 
                                    if success:
                                        st.success(f"Removed '{title}' from your list.", icon="🗑️")
@@ -394,83 +405,151 @@ def show_profile():
                                        st.error(f"Failed to remove '{title}': {message}", icon="❌")
 
 
-                    st.markdown('</div>', unsafe_allow_html=True) # End anime-list-item container
-                    st.markdown("---") # Separator between results
+                    st.markdown('</div>', unsafe_allow_html=True)
+                    st.markdown("---")
 
         else:
             st.info(f"No {list_type.lower()} anime found in your list.", icon="ℹ️")
-    
+
+    # --- My Stats Section ---
     elif selected_option == "My Stats":
         st.subheader("📊 Your Anime Stats")
 
-        # Fetch user anime data
-        user_data = user.get_all_anime(st.session_state.username)
-
-        # store genres in a dictionary
-        genres = defaultdict(int)
-
-        # user_data is a list of tuples (anime_title, episodes_watched, genre, added_at)
-        for anime in user_data:
-            genre_list = anime[2].split(",")
-            for genre in genre_list:
-                genres[genre.strip()] += 1
-
-        # get total episodes watched
-        total_episodes_watched = sum([anime[1] for anime in user_data ])
-        # get total anime watched
-        total_anime_watched = len(user_data)
-
-        # store the data in a dataframe
-        genre_df = pd.DataFrame(list(genres.items()), columns=["Genre", "Count"])
-        genre_df = genre_df.sort_values(by="Count", ascending=False)
-
-        if user_data:
-            # total_watched = len(user_data)
-            # genre_items = ""
-            # for genre, count in genres.items():
-            #     genre_items += f"<li>{genre}: {count}</li>"
+        with st.spinner("Loading your stats..."):
+            # Fetch all user anime data
+            # IMPORTANT: Verify that your get_all_anime function in database.py
+            # returns the columns in the order (anime_title, episodes_watched, genre, ...)
+            user_anime_data_for_stats = user.get_all_anime(st.session_state.username)
 
 
-            # st.markdown(f"""
-            #     <div style='background-color:#1f1f2e; padding:20px; border-radius:10px; color:white;'>
-            #         <h3>📈 Summary</h3>
-            #         <h3><strong>Genres:</strong></h3>
-            #         <ul style = padding-left: 20px;>
-            #             {genre_items}
-            #         </ul>
-            #     </div>
-            # """, unsafe_allow_html=True)
+            if user_anime_data_for_stats:
+                genres = defaultdict(int)
+                total_episodes_watched = 0
+                total_anime_count = len(user_anime_data_for_stats)
 
-            # Display total episodes watched
-            col1, col2 = st.columns(2)
-            with col1:
-                st.markdown(f"""
-                    <div ">
-                        <h4>Total Episodes Watched</h4>
-                        <h5 style = "color:aliceblue">{total_episodes_watched}</h5>
-                    </div>
+
+                for anime_entry in user_anime_data_for_stats:
+                    # Accessing title (index 0), episodes_watched (index 1), and genre (index 2)
+                    # Adjust indices if your get_all_anime returns a different format!
+                    try:
+                        title_for_stats = anime_entry[0] if len(anime_entry) > 0 else "Unknown Title"
+                        episodes_watched = anime_entry[1] if len(anime_entry) > 1 and isinstance(anime_entry[1], (int, float)) else 0
+                        genre_string = anime_entry[2] if len(anime_entry) > 2 and anime_entry[2] is not None else ""
+
+                    except IndexError:
+                        st.error(f"Error processing anime data for stats. Row structure unexpected: {anime_entry}. Skipping.")
+                        continue
+
+
+                    # Process genres
+                    if genre_string:
+                         genre_list = [g.strip() for g in genre_string.split(",") if g.strip()]
+                         for genre in genre_list:
+                             genres[genre] += 1
+
+                    # Sum episodes watched
+                    total_episodes_watched += episodes_watched
+
+
+                # store the data in a dataframe for plotting
+                genre_df = pd.DataFrame(list(genres.items()), columns=["Genre", "Count"])
+                genre_df = genre_df[genre_df["Count"] > 0].sort_values(by="Count", ascending=False)
+
+
+                # --- Display Stats Summary and Chart ---
+                # Make sure your CSS for stat-metric-box and chart-container is included
+                st.markdown("""
+                    <style>
+                    /* Your existing CSS for profile pic, profile box, anime list items, update/delete controls */
+                    /* ... (keep all the CSS from your previous profile.py code here) ... */
+
+                    /* New CSS for the Stats Section */
+                    .stat-metric-box {
+                        background-color: #2c2c3d;
+                        color: white;
+                        padding: 15px;
+                        border-radius: 10px;
+                        margin-bottom: 15px;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                        text-align: center;
+                    }
+                    .stat-metric-box h4 {
+                        color: #fce4ec;
+                        margin-top: 0;
+                        margin-bottom: 5px;
+                        font-size: 1.1em;
+                    }
+                    .stat-metric-box h5 {
+                        color: aliceblue;
+                        margin-top: 0;
+                        font-size: 1.4em;
+                        font-weight: bold;
+                    }
+                    .chart-container {
+                         background-color: #2c2c3d;
+                         padding: 15px;
+                         border-radius: 10px;
+                         box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                         margin-top: 20px;
+                    }
+                    .chart-container h3 {
+                        color: #fce4ec;
+                        margin-top: 0;
+                        margin-bottom: 15px;
+                        text-align: center;
+                    }
+                    </style>
                 """, unsafe_allow_html=True)
-            with col2:
-                st.markdown(f"""
-                    <div >
-                        <h4 >Total Anime Watched</h4>
-                        <h5 style = "color:aliceblue">{total_anime_watched}</h5>
-                    </div>
-                """, unsafe_allow_html=True)
-
-            # Plotting the genre distribution
-            fig = px.bar(
-                genre_df,
-                x = "Genre",
-                y = "Count",
-                color = "Genre",
-                title = "Anime Genre Distribution",
-                labels = {"Genre": "Genre", "Count": "Number of Anime"},
-                template = "plotly_dark",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-        else:
-            st.warning("No anime data found for your account.")
 
 
+                # Display total episodes watched and total anime watched in columns
+                col_stats1, col_stats2 = st.columns(2)
+                with col_stats1:
+                    st.markdown(f"""
+                        <div class="stat-metric-box">
+                            <h4>Total Episodes Watched</h4>
+                            <h5>{total_episodes_watched}</h5>
+                        </div>
+                    """, unsafe_allow_html=True)
+                with col_stats2:
+                    st.markdown(f"""
+                        <div class="stat-metric-box">
+                            <h4>Total Anime Entries</h4>
+                            <h5>{total_anime_count}</h5>
+                        </div>
+                    """, unsafe_allow_html=True)
+
+
+                # Display the genre distribution chart in a styled container
+                st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
+                st.markdown("<h3>Anime Genre Distribution</h3>", unsafe_allow_html=True)
+
+                if not genre_df.empty:
+                    fig = px.bar(
+                        genre_df,
+                        x="Genre",
+                        y="Count",
+                        color="Genre",
+                        labels={"Genre": "Genre", "Count": "Number of Anime"},
+                        template="plotly_dark",
+                    )
+                    fig.update_layout(
+                        xaxis={'categoryorder':'total descending'},
+                        margin=dict(l=20, r=20, t=10, b=20),
+                        plot_bgcolor="#2c2c3d",
+                        paper_bgcolor="#2c2c3d",
+                        font_color="white"
+                    )
+                    fig.update_xaxes(tickangle=45, tickfont=dict(size=10))
+
+
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No genre data available to display chart. Add some anime with genre information to see the distribution.", icon="ℹ️")
+
+
+                st.markdown("</div>", unsafe_allow_html=True)
+
+
+            else:
+                st.warning("No anime data found for your account to generate stats. Add some anime to your list!", icon="⚠️")
