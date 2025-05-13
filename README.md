@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="streamlit_app/assets/banner.jpg" alt="Anime Tracker Banner" width="100%">
+  <img src="streamlit_app/assets/banner.png" alt="Anime Tracker Banner" width="100%">
 </p>
 
 
