@@ -417,8 +417,6 @@ def show_profile():
 
         with st.spinner("Loading your stats..."):
             # Fetch all user anime data
-            # IMPORTANT: Verify that your get_all_anime function in database.py
-            # returns the columns in the order (anime_title, episodes_watched, genre, ...)
             user_anime_data_for_stats = user.get_all_anime(st.session_state.username)
 
 
@@ -430,7 +428,6 @@ def show_profile():
 
                 for anime_entry in user_anime_data_for_stats:
                     # Accessing title (index 0), episodes_watched (index 1), and genre (index 2)
-                    # Adjust indices if your get_all_anime returns a different format!
                     try:
                         title_for_stats = anime_entry[0] if len(anime_entry) > 0 else "Unknown Title"
                         episodes_watched = anime_entry[1] if len(anime_entry) > 1 and isinstance(anime_entry[1], (int, float)) else 0
