@@ -507,7 +507,6 @@ def show_profile():
 
 
                 # Display the genre distribution chart in a styled container
-                st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.markdown("<h3>Anime Genre Distribution</h3>", unsafe_allow_html=True)
 
                 if not genre_df.empty:
@@ -535,12 +534,10 @@ def show_profile():
                 else:
                     st.info("No genre data available to display chart. Add some anime with genre information to see the distribution.", icon="ℹ️")
 
-                st.markdown("</div>", unsafe_allow_html=True)
                 st.markdown("---")
 
 
                 # --- Display the heatmap of anime added dates (Month on X-axis) ---
-                st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
                 st.markdown("<h3>Anime Watching Activity Heatmap (Monthly)</h3>", unsafe_allow_html=True) # Updated title
 
                 if user_anime_data_for_stats:
@@ -554,74 +551,82 @@ def show_profile():
                                     continue
 
                         if valid_dates:
-                            # Determine the date range for the heatmap (e.g., last 12 months)
                             today = pd.to_datetime('today')
                             start_date = today - pd.Timedelta(days=365)
                             end_date = today
 
-                            # Create a DataFrame with all dates in the range (as Timestamps)
                             full_date_range_ts = pd.date_range(start=start_date, end=end_date, freq='D').to_frame(name='date')
 
-                            # Create a DataFrame from user's activity dates with counts using value_counts
                             activity_df = pd.DataFrame(valid_dates, columns=["date"])
                             activity_df['date'] = activity_df['date'].dt.date
                             activity_counts = activity_df['date'].value_counts().reset_index()
                             activity_counts.columns = ['date', 'count']
 
-                            # Merge the activity data with the full date range, fill missing dates with 0 count
                             full_date_range_ts['date'] = full_date_range_ts['date'].dt.date
                             heatmap_data_df = pd.merge(full_date_range_ts, activity_counts, on='date', how='left').fillna(0)
                             heatmap_data_df['count'] = heatmap_data_df['count'].astype(int)
 
-                            # Calculate day of week (0=Mon, 6=Sun) and Month (1=Jan, 12=Dec)
                             heatmap_data_df['date'] = pd.to_datetime(heatmap_data_df['date'])
                             heatmap_data_df['day'] = heatmap_data_df['date'].dt.dayofweek
-                            heatmap_data_df['month'] = heatmap_data_df['date'].dt.month # Extract month number
+                            heatmap_data_df['month'] = heatmap_data_df['date'].dt.month
 
-                            # Create the heatmap with Month on x-axis and Day of Week on y-axis
-                            fig = px.density_heatmap(
-                                heatmap_data_df,
-                                x='month',  # Use month number for x-axis
-                                y='day',    # Day of week remains on y-axis
-                                z='count',
-                                color_continuous_scale='Greens',
-                                labels={"count": "Activity Count", "day": "Day of Week", "month": "Month"},
-                                template="plotly_dark"
-                            )
+                            if not heatmap_data_df.empty:
+                                # Define a custom color scale that goes from black to green
+                                # Values are normalized between 0 and 1
+                                custom_greens_scale_normalized = [
+                                    [0.0, 'rgb(50, 50, 50)'],       # Grey for count 0
+                                    [0.0001, 'rgb(0, 50, 0)'],  # Very dark green just above 0
+                                    [0.2, 'rgb(0, 100, 0)'], # Darker green
+                                    [0.5, 'rgb(0, 180, 0)'], # Medium green
+                                    [1.0, 'rgb(0, 255, 0)']  # Bright green for the max count (end of the range)
+                                ]
 
-                            # Update y-axis ticks and labels to show days of the week
-                            fig.update_yaxes(
-                                tickvals=[0, 1, 2, 3, 4, 5, 6],
-                                ticktext=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-                                autorange="reversed",
-                                showgrid=False,
-                                zeroline=False
-                            )
+                                fig = px.density_heatmap(
+                                    heatmap_data_df,
+                                    x='month',
+                                    y='day',
+                                    z='count',
+                                    color_continuous_scale=custom_greens_scale_normalized, # Use the normalized custom scale
+                                    labels={"count": "Activity Count", "day": "Day of Week", "month": "Month"},
+                                    template="plotly_dark"
+                                )
 
-                            # Update x-axis ticks and labels to show month names
-                            fig.update_xaxes(
-                                tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], # Month numbers
-                                ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], # Month names
-                                showgrid=False,
-                                zeroline=False,
-                                tickangle=0, # Keep month names horizontal
-                                tickfont=dict(size=10),
-                            )
+                                fig.update_yaxes(
+                                    tickvals=[0, 1, 2, 3, 4, 5, 6],
+                                    ticktext=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                                    autorange="reversed",
+                                    showgrid=False,
+                                    zeroline=False
+                                )
 
-                            # Update layout for appearance
-                            fig.update_layout(
-                                margin=dict(l=40, r=20, t=40, b=20),
-                                plot_bgcolor="#121212",
-                                paper_bgcolor="#121212",
-                                font_color="white",
-                                xaxis_title="Month", # Updated x-axis title
-                                yaxis_title="Day of Week",
-                            )
+                                fig.update_xaxes(
+                                    tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                                    ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                                    showgrid=False,
+                                    zeroline=False,
+                                    tickangle=0,
+                                    tickfont=dict(size=10),
+                                )
 
-                            st.plotly_chart(fig, use_container_width=False)
+                                fig.update_layout(
+                                    margin=dict(l=40, r=20, t=40, b=20),
+                                    plot_bgcolor="#2c2c3d",
+                                    paper_bgcolor="#2c2c3d",
+                                    font_color="white",
+                                    xaxis_title="Month",
+                                    yaxis_title="Day of Week",
+                                    # Ensure color bar title is visible
+                                    coloraxis_colorbar=dict(
+                                        title="Activity Count",
+                                        title_font=dict(color="white"),
+                                        tickfont=dict(color="white")
+                                    )
+                                )
 
-                        else:
-                             st.info("No activity data available in the last year to generate heatmap.", icon="ℹ️")
+                                st.plotly_chart(fig, use_container_width=False)
+
+                            else:
+                                st.info("No activity data available in the last year to generate heatmap.", icon="ℹ️")
 
                     except IndexError:
                         st.error("Error: Could not find 'added_at' timestamp in your anime data. Please check the data structure.")
@@ -629,9 +634,11 @@ def show_profile():
                         st.error(f"An error occurred while generating the heatmap: {e}")
 
                 else:
-                     st.info("No anime data found for your account to generate heatmap.", icon="⚠️")
+                    st.info("No anime data found for your account to generate heatmap.", icon="⚠️")
 
-                st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
+
+
 
 
             else:
