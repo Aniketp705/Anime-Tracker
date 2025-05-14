@@ -8,7 +8,6 @@ import requests
 import time
 from database import user
 
-
 def show_profile():
 
     # Find the user
@@ -412,22 +411,19 @@ def show_profile():
             st.info(f"No {list_type.lower()} anime found in your list.", icon="ℹ️")
 
     # --- My Stats Section ---
+    # --- My Stats Section ---
     elif selected_option == "My Stats":
         st.subheader("📊 Your Anime Stats")
 
         with st.spinner("Loading your stats..."):
-            # Fetch all user anime data
             user_anime_data_for_stats = user.get_all_anime(st.session_state.username)
-
 
             if user_anime_data_for_stats:
                 genres = defaultdict(int)
                 total_episodes_watched = 0
                 total_anime_count = len(user_anime_data_for_stats)
 
-
                 for anime_entry in user_anime_data_for_stats:
-                    # Accessing title (index 0), episodes_watched (index 1), and genre (index 2)
                     try:
                         title_for_stats = anime_entry[0] if len(anime_entry) > 0 else "Unknown Title"
                         episodes_watched = anime_entry[1] if len(anime_entry) > 1 and isinstance(anime_entry[1], (int, float)) else 0
@@ -437,24 +433,18 @@ def show_profile():
                         st.error(f"Error processing anime data for stats. Row structure unexpected: {anime_entry}. Skipping.")
                         continue
 
-
-                    # Process genres
                     if genre_string:
                          genre_list = [g.strip() for g in genre_string.split(",") if g.strip()]
                          for genre in genre_list:
                              genres[genre] += 1
 
-                    # Sum episodes watched
                     total_episodes_watched += episodes_watched
 
-
-                # store the data in a dataframe for plotting
                 genre_df = pd.DataFrame(list(genres.items()), columns=["Genre", "Count"])
                 genre_df = genre_df[genre_df["Count"] > 0].sort_values(by="Count", ascending=False)
 
-
                 # --- Display Stats Summary and Chart ---
-                # Make sure your CSS for stat-metric-box and chart-container is included
+                # Ensure your CSS for stat-metric-box and chart-container is included in the main <style> block
                 st.markdown("""
                     <style>
                     /* Your existing CSS for profile pic, profile box, anime list items, update/delete controls */
@@ -499,7 +489,6 @@ def show_profile():
                 """, unsafe_allow_html=True)
 
 
-                # Display total episodes watched and total anime watched in columns
                 col_stats1, col_stats2 = st.columns(2)
                 with col_stats1:
                     st.markdown(f"""
@@ -535,15 +524,112 @@ def show_profile():
                         margin=dict(l=20, r=20, t=10, b=20),
                         plot_bgcolor="#2c2c3d",
                         paper_bgcolor="#2c2c3d",
-                        font_color="white"
+                        font_color="white",
+                        bargap=0.2,
+                        bargroupgap=0.1
                     )
                     fig.update_xaxes(tickangle=45, tickfont=dict(size=10))
-
+                    fig.update_yaxes(showgrid=True, gridcolor="#3a3a4e")
 
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("No genre data available to display chart. Add some anime with genre information to see the distribution.", icon="ℹ️")
 
+                st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("---")
+
+
+                # --- Display the heatmap of anime added dates (Month on X-axis) ---
+                st.markdown("<div class='chart-container'>", unsafe_allow_html=True)
+                st.markdown("<h3>Anime Watching Activity Heatmap (Monthly)</h3>", unsafe_allow_html=True) # Updated title
+
+                if user_anime_data_for_stats:
+                    try:
+                        valid_dates = []
+                        for anime_entry in user_anime_data_for_stats:
+                            if len(anime_entry) > 3 and anime_entry[3] is not None:
+                                try:
+                                    valid_dates.append(pd.to_datetime(anime_entry[3]))
+                                except (ValueError, TypeError):
+                                    continue
+
+                        if valid_dates:
+                            # Determine the date range for the heatmap (e.g., last 12 months)
+                            today = pd.to_datetime('today')
+                            start_date = today - pd.Timedelta(days=365)
+                            end_date = today
+
+                            # Create a DataFrame with all dates in the range (as Timestamps)
+                            full_date_range_ts = pd.date_range(start=start_date, end=end_date, freq='D').to_frame(name='date')
+
+                            # Create a DataFrame from user's activity dates with counts using value_counts
+                            activity_df = pd.DataFrame(valid_dates, columns=["date"])
+                            activity_df['date'] = activity_df['date'].dt.date
+                            activity_counts = activity_df['date'].value_counts().reset_index()
+                            activity_counts.columns = ['date', 'count']
+
+                            # Merge the activity data with the full date range, fill missing dates with 0 count
+                            full_date_range_ts['date'] = full_date_range_ts['date'].dt.date
+                            heatmap_data_df = pd.merge(full_date_range_ts, activity_counts, on='date', how='left').fillna(0)
+                            heatmap_data_df['count'] = heatmap_data_df['count'].astype(int)
+
+                            # Calculate day of week (0=Mon, 6=Sun) and Month (1=Jan, 12=Dec)
+                            heatmap_data_df['date'] = pd.to_datetime(heatmap_data_df['date'])
+                            heatmap_data_df['day'] = heatmap_data_df['date'].dt.dayofweek
+                            heatmap_data_df['month'] = heatmap_data_df['date'].dt.month # Extract month number
+
+                            # Create the heatmap with Month on x-axis and Day of Week on y-axis
+                            fig = px.density_heatmap(
+                                heatmap_data_df,
+                                x='month',  # Use month number for x-axis
+                                y='day',    # Day of week remains on y-axis
+                                z='count',
+                                color_continuous_scale='Greens',
+                                labels={"count": "Activity Count", "day": "Day of Week", "month": "Month"},
+                                template="plotly_dark"
+                            )
+
+                            # Update y-axis ticks and labels to show days of the week
+                            fig.update_yaxes(
+                                tickvals=[0, 1, 2, 3, 4, 5, 6],
+                                ticktext=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                                autorange="reversed",
+                                showgrid=False,
+                                zeroline=False
+                            )
+
+                            # Update x-axis ticks and labels to show month names
+                            fig.update_xaxes(
+                                tickvals=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], # Month numbers
+                                ticktext=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], # Month names
+                                showgrid=False,
+                                zeroline=False,
+                                tickangle=0, # Keep month names horizontal
+                                tickfont=dict(size=10),
+                            )
+
+                            # Update layout for appearance
+                            fig.update_layout(
+                                margin=dict(l=40, r=20, t=40, b=20),
+                                plot_bgcolor="#121212",
+                                paper_bgcolor="#121212",
+                                font_color="white",
+                                xaxis_title="Month", # Updated x-axis title
+                                yaxis_title="Day of Week",
+                            )
+
+                            st.plotly_chart(fig, use_container_width=False)
+
+                        else:
+                             st.info("No activity data available in the last year to generate heatmap.", icon="ℹ️")
+
+                    except IndexError:
+                        st.error("Error: Could not find 'added_at' timestamp in your anime data. Please check the data structure.")
+                    except Exception as e:
+                        st.error(f"An error occurred while generating the heatmap: {e}")
+
+                else:
+                     st.info("No anime data found for your account to generate heatmap.", icon="⚠️")
 
                 st.markdown("</div>", unsafe_allow_html=True)
 
