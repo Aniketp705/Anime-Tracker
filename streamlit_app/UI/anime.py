@@ -272,77 +272,73 @@ def show_anime_page():
         # Assume st.session_state.username is set correctly before this page loads
         current_username = st.session_state.username
 
-        with st.form("add_anime_form", clear_on_submit=True): # clear_on_submit helps reset form fields
+        with st.form("add_anime_form", clear_on_submit=True):  # clear_on_submit helps reset form fields
             # Handle cases where total_eps is None or 0
-            max_episodes = total_eps if isinstance(total_eps, int) and total_eps > 0 else 5000 # Default max if unknown
+            max_episodes = total_eps if isinstance(total_eps, int) and total_eps > 0 else 5000
             min_episodes = 0
 
             episodes_watched = st.number_input(
                 "Episodes Watched",
                 min_value=min_episodes,
                 max_value=max_episodes,
-                value=0, # Default value
+                value=0,
                 step=1
             )
 
             # Determine default status based on episodes watched
-            default_status = "Watching" # Default status
+            default_status = "Watching"
             if isinstance(total_eps, int) and total_eps > 0 and episodes_watched >= total_eps:
                 default_status = "Completed"
             elif episodes_watched == 0:
-                default_status = "Plan to Watch" # If 0 episodes, default to Plan to Watch
-
+                default_status = "Plan to Watch"
 
             status_options = ["Watching", "Completed", "On-Hold", "Dropped", "Plan to Watch"]
-            # Find the index of the default status to pre-select the selectbox
-            # Use try-except in case default_status is not in status_options (unlikely with current logic but safe)
             try:
                 default_index = status_options.index(default_status)
             except ValueError:
-                 default_index = 0 # Default to the first option if status is unexpected
-
+                default_index = 0
 
             status_selected = st.selectbox(
                 "Status",
                 status_options,
-                index=default_index # Pre-select based on episodes watched
+                index=default_index
             )
+
             submitted = st.form_submit_button("Add to My Anime")
 
             if submitted:
-                # Removed explicit login check here as per previous discussion
                 try:
-                    # Call your database function - **Using your return structure**
+                    # If user manually selects "Completed", force episodes_watched = total_eps
+                    if status_selected == "Completed" and isinstance(total_eps, int) and episodes_watched < total_eps:
+                        episodes_watched = total_eps
+
+                    # Call your database function
                     db_status, db_msg = user.add_anime(
                         current_username,
-                        title, # Use title from selected anime
+                        title,
                         episodes_watched,
-                        status_selected, # Use the selected status (which is pre-selected but can be changed)
-                        genres if genres != "N/A" else "", # Pass cleaned genres
-                        total_eps if total_eps else None, # Pass None if unknown
-                        year if year != "Unknown" else None, # Pass None if unknown
-                        rating if rating else None # Pass None if no rating
+                        status_selected,
+                        genres if genres != "N/A" else "",
+                        total_eps if total_eps else None,
+                        year if year != "Unknown" else None,
+                        rating if rating else None
                     )
                 except Exception as e:
-                     st.error(f"Error interacting with database: {e}")
-                     print(f"Database Interaction Error: {e}") # Log the error
-                     db_status = False
-                     db_msg = f"Database error: {e}"
+                    st.error(f"Error interacting with database: {e}")
+                    print(f"Database Interaction Error: {e}")
+                    db_status = False
+                    db_msg = f"Database error: {e}"
 
-                # Handle success/error based on db_status from your function
                 if db_status:
-                    st.success(f"'{title}' added to your list!") # Use standard success message or db_msg if preferred
+                    st.success(f"'{title}' added to your list!")
                 else:
-                    # Show the error message returned by your add_anime function
-                    st.error(db_msg if db_msg else "Failed to add anime.") # Display DB message
+                    st.error(db_msg if db_msg else "Failed to add anime.")
 
-                # Common actions after submit (success or fail)
-                time.sleep(2) # Pause for user to see message
-                # Reset state for a new search
+                time.sleep(2)
                 st.session_state.selected_anime = None
                 st.session_state.search_results = None
                 st.session_state.show_search_results = False
-                # Set the flag to clear input on the next run
                 st.session_state.clear_search_input_on_next_run = True
-                st.rerun() # Rerun to apply state changes
+                st.rerun()
+
 

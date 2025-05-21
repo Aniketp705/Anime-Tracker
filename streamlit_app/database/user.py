@@ -35,7 +35,8 @@ def create_watched_table():
             total_episodes INTEGER,
             year TEXT,
             rating REAL,
-            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (username) REFERENCES users (username)
         )
     ''')
     conn.commit()
@@ -209,3 +210,5 @@ def delete_all_anime(username):
     conn.commit()
 
 
+create_watched_table()
+conn.commit()

@@ -98,9 +98,9 @@ def show_profile():
             background-color: #fce4ec;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
-         .anime-list-item:hover {
-             background-color: #f0f0f0;
-         }
+        #  .anime-list-item:hover {
+        #      background-color: #f0f0f0;
+        #  }
         .anime-list-image {
             height: 300px;
             border-radius: 10px;
