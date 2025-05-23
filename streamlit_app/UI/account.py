@@ -4,7 +4,11 @@ import os, sys, time
 
 from database import user
 
-user.create_table()
+try:
+    user.create_table()
+except Exception as e:
+    st.error(f"Error creating user table: {e}")
+    st.stop()
 
 
 def my_account():

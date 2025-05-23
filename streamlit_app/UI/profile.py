@@ -8,6 +8,8 @@ import requests
 import time
 from database import user
 
+
+
 def show_profile():
 
     # Find the user
@@ -89,18 +91,7 @@ def show_profile():
             justify-content: center;
         }
         /* Style for anime list items */
-        .anime-list-item {
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: flex-start;
-            background-color: #fce4ec;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        }
-        #  .anime-list-item:hover {
-        #      background-color: #f0f0f0;
-        #  }
+        
         .anime-list-image {
             height: 300px;
             border-radius: 10px;
@@ -309,8 +300,6 @@ def show_profile():
                          st.warning(f"An unexpected error occurred fetching image for '{title}': {e}", icon="❗")
 
 
-                    # --- Display each anime item ---
-                    st.markdown('<div class="anime-list-item">', unsafe_allow_html=True)
                     # Adjust column ratios based on whether update controls are shown
                     if list_type == "Watching":
                          col_img, col_details, col_update = st.columns([1, 3, 1.5])
@@ -637,9 +626,5 @@ def show_profile():
                     st.info("No anime data found for your account to generate heatmap.", icon="⚠️")
 
                     st.markdown("</div>", unsafe_allow_html=True)
-
-
-
-
             else:
                 st.warning("No anime data found for your account to generate stats. Add some anime to your list!", icon="⚠️")
