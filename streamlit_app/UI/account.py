@@ -211,7 +211,7 @@ def my_account():
                     add_user_success, add_user_message = user.add_user(username, email, password)
                     if add_user_success:
                          st.success("Registration successful! You can now login.")
-                         time.sleep(1.5)
+                         time.sleep(1)
                          st.rerun()
                     else:
                          st.error(f"Registration failed: {add_user_message}")
