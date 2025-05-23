@@ -24,27 +24,46 @@ def app():
     # --- Custom CSS Styling ---
     st.markdown("""
         <style>
-        # .stApp {
-        #     background-color: #1f1f2e;
-        #     color: white;
-        #     font-family: 'Arial', sans-serif;
-        # }
+        /* No .stApp global background changes here */
 
+        /* Keyframes for animations */
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseGlow {
+            0% { text-shadow: 0 0 5px rgba(252, 228, 236, 0.5); }
+            50% { text-shadow: 0 0 15px rgba(252, 228, 236, 0.8); }
+            100% { text-shadow: 0 0 5px rgba(252, 228, 236, 0.5); }
+        }
+
+        /* Title Styling with Animation */
         .stApp h1 {
             color: #fce4ec;
             text-align: center;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0; /* Start hidden */
+            animation: fadeInScale 1s ease-out forwards;
+            animation-delay: 0.2s;
         }
 
+        /* Subheading Styling with Animation */
         .stApp h4 {
-             color: #b3e5fc;
-             text-align: center;
-             margin-top: 0;
-             margin-bottom: 30px;
+            color: #b3e5fc;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 30px;
+            opacity: 0; /* Start hidden */
+            animation: slideInUp 0.8s ease-out forwards;
+            animation-delay: 0.5s;
         }
-
-        /* Removed .hero-section styles */
 
         .feature-item {
             background-color: #2c2c3d;
@@ -58,7 +77,21 @@ def app():
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            opacity: 0; /* Start hidden for animation */
+            transform: translateY(20px); /* Start slightly down */
+            animation: slideInUp 0.7s ease-out forwards;
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Hover transition */
         }
+        .feature-item:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4); /* Stronger shadow on hover */
+        }
+        /* Staggered animation delays for feature items */
+        .st-emotion-cache-1r6dm5b > div:nth-child(1) .feature-item { animation-delay: 0.8s; } /* Target first column's feature-item */
+        .st-emotion-cache-1r6dm5b > div:nth-child(2) .feature-item { animation-delay: 1.0s; } /* Target second column's feature-item */
+        .st-emotion-cache-1r6dm5b > div:nth-child(3) .feature-item { animation-delay: 1.2s; } /* Target third column's feature-item */
+
+
         .feature-item h5 {
             color: #fce4ec;
             margin-top: 10px;
@@ -69,18 +102,33 @@ def app():
             font-size: 0.9em;
         }
         .feature-item .feature-icon {
-             font-size: 2em;
-             color: #4F8BF9;
-             margin-bottom: 10px;
+            font-size: 2.5em; /* Slightly larger icon */
+            color: #4F8BF9;
+            margin-bottom: 10px;
+            animation: pulseGlow 2s infinite alternate; /* Pulsing glow for icons */
         }
+        /* Staggered pulse glow for icons */
+        .st-emotion-cache-1r6dm5b > div:nth-child(1) .feature-icon { animation-delay: 0.5s; }
+        .st-emotion-cache-1r6dm5b > div:nth-child(2) .feature-icon { animation-delay: 0.7s; }
+        .st-emotion-cache-1r6dm5b > div:nth-child(3) .feature-icon { animation-delay: 0.9s; }
 
-        /* Removed .stButton styles */
+
+        /* Main Image Section Animation */
+        .main-image-container img {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideInUp 1s ease-out forwards;
+            animation-delay: 1.5s; /* Delay after features */
+        }
 
         .footer {
             text-align: center;
             margin-top: 50px;
             font-size: 0.9em;
             color: #b0bec5;
+            opacity: 0;
+            animation: fadeInScale 1s ease-out forwards;
+            animation-delay: 2s; /* Delay footer appearance */
         }
         </style>
     """, unsafe_allow_html=True)
@@ -97,7 +145,8 @@ def app():
 
     # --- Feature Highlights Section ---
     st.markdown("### ✨ Key Features:")
-    st.markdown('<div style="margin-bottom: 30px;">', unsafe_allow_html=True)
+    # Added a container for feature items to better target them with CSS
+    st.markdown('<div class="feature-section-container" style="margin-bottom: 30px;">', unsafe_allow_html=True)
 
     col1, col2, col3 = st.columns(3)
 
@@ -128,7 +177,7 @@ def app():
             </div>
         """, unsafe_allow_html=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True) # Close feature-section-container
 
 
     st.markdown("---")
@@ -136,7 +185,10 @@ def app():
 
     # --- Main Image Section ---
     image_path = "streamlit_app/assets/cityscape.jpg"
+    # Added a container for the image to apply animation to it
+    st.markdown('<div class="main-image-container">', unsafe_allow_html=True)
     st.markdown(get_image_html(image_path, height="200px", border_radius="10px"), unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
     st.markdown("---")
