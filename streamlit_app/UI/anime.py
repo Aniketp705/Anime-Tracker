@@ -3,7 +3,6 @@ import base64
 import requests
 import os
 import time
-# Assuming 'user' object with 'add_anime' method is available globally
 from database import user # Make sure this import works in your environment
 
 # --- Helper Function (Updated) ---
@@ -19,6 +18,23 @@ def get_image_html(path, height="200px"):
     except FileNotFoundError:
         st.error(f"Error: Wallpaper file not found at {path}")
         return '<div style="width:100%; height:200px; background-color:grey; border-radius:20px; display:flex; align-items:center; justify-content:center; color:white;">Wallpaper not found</div>'
+
+# --- Helper Function to Fetch Anime Genres (Cached) ---
+@st.cache_data(ttl=3600) # Cache for 1 hour
+def fetch_anime_genres():
+    """Fetches anime genres from Jikan API."""
+    try:
+        response = requests.get("https://api.jikan.moe/v4/genres/anime", timeout=10)
+        response.raise_for_status() # Raise an exception for HTTP errors
+        genres_data = response.json().get("data", [])
+        # Create a dictionary of genre_name: genre_id
+        return {genre['name']: genre['mal_id'] for genre in genres_data if 'name' in genre and 'mal_id' in genre}
+    except requests.exceptions.RequestException as e:
+        st.error(f"Failed to fetch genres: {e}")
+        return {}
+    except Exception as e: # Catch any other unexpected errors during parsing etc.
+        st.error(f"An unexpected error occurred while fetching genres: {e}")
+        return {}
 
 
 def show_anime_page():
@@ -300,8 +316,8 @@ def show_anime_page():
     # --- Page Setup ---
     image_path = "streamlit_app/assets/wallpaper.jpg" # Make sure this path is correct
     st.markdown(get_image_html(image_path, height="220px"), unsafe_allow_html=True) # Slightly taller wallpaper
-    st.title("Add Watched Anime")
-    st.write("Search and log your watched anime. Discover new series or revisit old favorites.") # Enhanced subtitle
+    st.title("Add Anime")
+    st.write("Search and log your watched/planned anime. Discover new series or revisit old favorites.") # Enhanced subtitle
 
     # --- Initialize Session State Variables ---
     if "search_results" not in st.session_state:
@@ -314,6 +330,8 @@ def show_anime_page():
         st.session_state.clear_search_input_on_next_run = False
     if "anime_title_input" not in st.session_state:
         st.session_state.anime_title_input = ""
+    if "genre_select" not in st.session_state: # For genre dropdown
+        st.session_state.genre_select = "Select a genre..."
 
     if st.session_state.get("clear_search_input_on_next_run", False):
         st.session_state.anime_title_input = ""
@@ -330,6 +348,7 @@ def show_anime_page():
     with col_search:
         if st.button("🔍 Search", key="search_button"): # Added emoji to button
             if anime_title_from_input:
+                st.session_state.genre_select = "Select a genre..." # Reset genre dropdown
                 with st.spinner("Searching for anime... 📺"): # Enhanced spinner text
                     query = anime_title_from_input.strip()
                     search_url = f"https://api.jikan.moe/v4/anime?q={query}&limit=8&sfw"
@@ -343,23 +362,70 @@ def show_anime_page():
                                 st.session_state.search_results = data
                                 st.session_state.selected_anime = None
                                 st.session_state.show_search_results = True
+                                st.rerun() # Rerun to reflect changes and reset genre dropdown
                             else:
                                 st.warning("No anime found for that title. Please try a different one! 🤔")
                                 st.session_state.search_results = None
                                 st.session_state.selected_anime = None
                                 st.session_state.show_search_results = False
+                                # No rerun needed, warning is shown
                         else:
                             st.error(f"API Error (Code: {response.status_code}). Please try again later. 😥")
                             st.session_state.search_results = None
                             st.session_state.selected_anime = None
                             st.session_state.show_search_results = False
+                            # No rerun needed
                     except requests.exceptions.RequestException as e:
                         st.error(f"Network error: Could not connect to the anime database. 🌐 ({e})")
                         st.session_state.search_results = None
                         st.session_state.selected_anime = None
                         st.session_state.show_search_results = False
+                        # No rerun needed
             else:
                 st.warning("Please enter an anime title to search. 🎬")
+
+    st.divider()
+    st.subheader("Or Search by Genre")
+
+    genres_dict = fetch_anime_genres()
+    genre_names_options = ["Select a genre..."] + list(genres_dict.keys())
+
+    selected_genre_name = st.selectbox(
+        "Select Genre",
+        options=genre_names_options,
+        key="genre_select" # Uses the initialized session state key
+    )
+
+    col_genre_search, col_genre_spacer = st.columns([1, 3]) # Adjusted columns for search button
+    with col_genre_search:
+        if st.button("✨ Search by Genre", key="genre_search_button"):
+            if selected_genre_name != "Select a genre..." and selected_genre_name in genres_dict:
+                genre_id = genres_dict[selected_genre_name]
+                st.session_state.clear_search_input_on_next_run = True # Set flag to clear title input on next run
+                with st.spinner(f"Searching top anime in {selected_genre_name}... 📺"):
+                    search_url = f"https://api.jikan.moe/v4/anime?genres={genre_id}&limit=10&order_by=score&sort=desc&sfw"
+                    try:
+                        response = requests.get(search_url, timeout=10)
+                        time.sleep(0.5) # Respect API rate limits
+                        response.raise_for_status()
+                        data = response.json().get("data", [])
+                        if isinstance(data, list) and data:
+                            st.session_state.search_results = data
+                            st.session_state.selected_anime = None
+                            st.session_state.show_search_results = True
+                            st.rerun() # Rerun to reflect changes and clear title input
+                        else:
+                            st.warning(f"No top anime found for the genre '{selected_genre_name}'. Try another genre! 🤔")
+                            st.session_state.search_results = None
+                            st.session_state.selected_anime = None
+                            st.session_state.show_search_results = False
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"API Error or Network issue during genre search (Code: {response.status_code if 'response' in locals() else 'N/A'}). Details: {e} 😥")
+                        st.session_state.search_results = None
+                        st.session_state.selected_anime = None
+                        st.session_state.show_search_results = False
+            else:
+                st.warning("Please select a genre to search. 🎶")
 
     if st.session_state.show_search_results and st.session_state.search_results and not st.session_state.selected_anime:
         st.divider()
@@ -499,4 +565,3 @@ def show_anime_page():
                 st.session_state.show_search_results = False
                 st.session_state.clear_search_input_on_next_run = True
                 st.rerun()
-
