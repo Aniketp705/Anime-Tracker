@@ -109,7 +109,6 @@ def _link_anime_genre(anime_id, genre_id):
         ''', (anime_id, genre_id))
         conn.commit()
     except sqlite3.IntegrityError:
-        # This means the link already exists (anime_id, genre_id) is a PRIMARY KEY
         pass # Do nothing if already linked
 
 
